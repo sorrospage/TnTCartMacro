@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "tntswap",
+  "version": "1.0.0",
+  "name": "TNT Minecart Swap",
+  "description": "Automatically swaps to Flint and Steel after placing a TNT Minecart.",
+  "authors": ["You"],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.tntswap.TntSwapMod"
+    ]
+  },
+  "mixins": [
+    "tntswap.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.18.4",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
