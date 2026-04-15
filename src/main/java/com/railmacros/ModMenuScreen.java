@@ -30,6 +30,8 @@ public class ModMenuScreen extends Screen {
     private boolean elytraSwapExpanded = false;
     private boolean rocketUseExpanded = false;
     private boolean crystalAuraExpanded = false;
+    private boolean stunSlamExpanded = false;
+    private boolean autoMaceExpanded = false;
 
     // Track slider widgets per section so we can show/hide them
     private final List<ClickableWidget> xbowSliders = new ArrayList<>();
@@ -41,6 +43,8 @@ public class ModMenuScreen extends Screen {
     private final List<ClickableWidget> elytraSwapSliders = new ArrayList<>();
     private final List<ClickableWidget> rocketUseSliders = new ArrayList<>();
     private final List<ClickableWidget> crystalAuraSliders = new ArrayList<>();
+    private final List<ClickableWidget> stunSlamSliders = new ArrayList<>();
+    private final List<ClickableWidget> autoMaceSliders = new ArrayList<>();
 
     public ModMenuScreen() {
         super(Text.literal("Rappture Client"));
@@ -58,6 +62,8 @@ public class ModMenuScreen extends Screen {
         elytraSwapSliders.clear();
         rocketUseSliders.clear();
         crystalAuraSliders.clear();
+        stunSlamSliders.clear();
+        autoMaceSliders.clear();
 
         int centerX = this.width / 2 - BUTTON_WIDTH / 2;
         int halfWidth = (BUTTON_WIDTH - 4) / 2;
@@ -68,6 +74,7 @@ public class ModMenuScreen extends Screen {
         addDrawableChild(ButtonWidget.builder(getXbowText(), button -> {
             RailMacrosMod.RAIL_MACRO.toggle();
             button.setMessage(getXbowText());
+            ModConfig.save();
         }).dimensions(centerX, y, halfWidth, WIDGET_HEIGHT).build());
 
         addDrawableChild(ButtonWidget.builder(
@@ -94,6 +101,7 @@ public class ModMenuScreen extends Screen {
         addDrawableChild(ButtonWidget.builder(getInstaCartText(), button -> {
             RailMacrosMod.BOW_MACRO.toggle();
             button.setMessage(getInstaCartText());
+            ModConfig.save();
         }).dimensions(centerX, y, halfWidth, WIDGET_HEIGHT).build());
 
         addDrawableChild(ButtonWidget.builder(
@@ -116,6 +124,7 @@ public class ModMenuScreen extends Screen {
         addDrawableChild(ButtonWidget.builder(getTriggerBotText(), button -> {
             RailMacrosMod.TRIGGER_BOT.toggle();
             button.setMessage(getTriggerBotText());
+            ModConfig.save();
         }).dimensions(centerX, y, halfWidth, WIDGET_HEIGHT).build());
 
         addDrawableChild(ButtonWidget.builder(
@@ -150,6 +159,7 @@ public class ModMenuScreen extends Screen {
         addDrawableChild(ButtonWidget.builder(getShieldBreakerText(), button -> {
             RailMacrosMod.SHIELD_BREAKER.toggle();
             button.setMessage(getShieldBreakerText());
+            ModConfig.save();
         }).dimensions(centerX, y, halfWidth, WIDGET_HEIGHT).build());
 
         addDrawableChild(ButtonWidget.builder(
@@ -172,6 +182,7 @@ public class ModMenuScreen extends Screen {
         addDrawableChild(ButtonWidget.builder(getSafeAnchorText(), button -> {
             RailMacrosMod.SAFE_ANCHOR.toggle();
             button.setMessage(getSafeAnchorText());
+            ModConfig.save();
         }).dimensions(centerX, y, halfWidth, WIDGET_HEIGHT).build());
 
         addDrawableChild(ButtonWidget.builder(
@@ -192,6 +203,7 @@ public class ModMenuScreen extends Screen {
         addDrawableChild(ButtonWidget.builder(getElytraSwapText(), button -> {
             RailMacrosMod.ELYTRA_SWAP.toggle();
             button.setMessage(getElytraSwapText());
+            ModConfig.save();
         }).dimensions(centerX, y, halfWidth, WIDGET_HEIGHT).build());
 
         addDrawableChild(ButtonWidget.builder(
@@ -212,6 +224,7 @@ public class ModMenuScreen extends Screen {
         addDrawableChild(ButtonWidget.builder(getRocketUseText(), button -> {
             RailMacrosMod.ROCKET_USE.toggle();
             button.setMessage(getRocketUseText());
+            ModConfig.save();
         }).dimensions(centerX, y, halfWidth, WIDGET_HEIGHT).build());
 
         addDrawableChild(ButtonWidget.builder(
@@ -232,6 +245,7 @@ public class ModMenuScreen extends Screen {
         addDrawableChild(ButtonWidget.builder(getCrystalAuraText(), button -> {
             RailMacrosMod.CRYSTAL_AURA.toggle();
             button.setMessage(getCrystalAuraText());
+            ModConfig.save();
         }).dimensions(centerX, y, halfWidth, WIDGET_HEIGHT).build());
 
         addDrawableChild(ButtonWidget.builder(
@@ -252,10 +266,53 @@ public class ModMenuScreen extends Screen {
                     v -> ca.setBreakMaxDelay((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
         }
 
+        // ===== StunSlam =====
+        addDrawableChild(ButtonWidget.builder(getStunSlamText(), button -> {
+            RailMacrosMod.STUN_SLAM.toggle();
+            button.setMessage(getStunSlamText());
+            ModConfig.save();
+        }).dimensions(centerX, y, halfWidth, WIDGET_HEIGHT).build());
+
+        addDrawableChild(ButtonWidget.builder(
+                Text.literal(stunSlamExpanded ? "\u00a77\u25BC Settings" : "\u00a77\u25B6 Settings"),
+                button -> { stunSlamExpanded = !stunSlamExpanded; clearAndInit(); }
+        ).dimensions(centerX + halfWidth + 4, y, halfWidth, WIDGET_HEIGHT).build());
+
+        y += SPACING;
+        if (stunSlamExpanded) {
+            StunSlam ss = RailMacrosMod.STUN_SLAM;
+            y = addSlider(stunSlamSliders, centerX, y, "Min Delay", 0, 500, ss.getMinDelayMs(),
+                    v -> ss.setMinDelayMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
+            y = addSlider(stunSlamSliders, centerX, y, "Max Delay", 0, 500, ss.getMaxDelayMs(),
+                    v -> ss.setMaxDelayMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
+        }
+
+        // ===== AutoMace =====
+        addDrawableChild(ButtonWidget.builder(getAutoMaceText(), button -> {
+            RailMacrosMod.AUTO_MACE.toggle();
+            button.setMessage(getAutoMaceText());
+            ModConfig.save();
+        }).dimensions(centerX, y, halfWidth, WIDGET_HEIGHT).build());
+
+        addDrawableChild(ButtonWidget.builder(
+                Text.literal(autoMaceExpanded ? "\u00a77\u25BC Settings" : "\u00a77\u25B6 Settings"),
+                button -> { autoMaceExpanded = !autoMaceExpanded; clearAndInit(); }
+        ).dimensions(centerX + halfWidth + 4, y, halfWidth, WIDGET_HEIGHT).build());
+
+        y += SPACING;
+        if (autoMaceExpanded) {
+            AutoMace am = RailMacrosMod.AUTO_MACE;
+            y = addSlider(autoMaceSliders, centerX, y, "Min Delay", 0, 500, am.getMinDelayMs(),
+                    v -> am.setMinDelayMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
+            y = addSlider(autoMaceSliders, centerX, y, "Max Delay", 0, 500, am.getMaxDelayMs(),
+                    v -> am.setMaxDelayMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
+        }
+
         // ===== AutoSprint =====
         addDrawableChild(ButtonWidget.builder(getAutoSprintText(), button -> {
             RailMacrosMod.AUTO_SPRINT.toggle();
             button.setMessage(getAutoSprintText());
+            ModConfig.save();
         }).dimensions(centerX, y, BUTTON_WIDTH, WIDGET_HEIGHT).build());
 
         y += SPACING;
@@ -282,6 +339,13 @@ public class ModMenuScreen extends Screen {
         // Draw dark background behind title for visibility
         context.fill(titleX - 4, titleY - 2, titleX + titleWidth + 4, titleY + 12, 0xAA000000);
         context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, titleY, 0xFFFFFF);
+    }
+
+    @Override
+    public void close() {
+        // Save config whenever the menu is closed
+        ModConfig.save();
+        super.close();
     }
 
     @Override
@@ -327,6 +391,16 @@ public class ModMenuScreen extends Screen {
     private Text getCrystalAuraText() {
         boolean on = RailMacrosMod.CRYSTAL_AURA.isEnabled();
         return Text.literal("CrystalAura: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
+    }
+
+    private Text getStunSlamText() {
+        boolean on = RailMacrosMod.STUN_SLAM.isEnabled();
+        return Text.literal("StunSlam: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
+    }
+
+    private Text getAutoMaceText() {
+        boolean on = RailMacrosMod.AUTO_MACE.isEnabled();
+        return Text.literal("AutoMace: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
     }
 
     private Text getAutoSprintText() {

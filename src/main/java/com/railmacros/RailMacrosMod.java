@@ -22,6 +22,8 @@ public class RailMacrosMod implements ClientModInitializer {
     public static final ElytraSwap ELYTRA_SWAP = new ElytraSwap();
     public static final RocketUse ROCKET_USE = new RocketUse();
     public static final CrystalAura CRYSTAL_AURA = new CrystalAura();
+    public static final StunSlam STUN_SLAM = new StunSlam();
+    public static final AutoMace AUTO_MACE = new AutoMace();
 
     private static KeyBinding railMacroToggle;
     private static KeyBinding bowMacroToggle;
@@ -73,6 +75,9 @@ public class RailMacrosMod implements ClientModInitializer {
                 GLFW_MOUSE_BUTTON_4,
                 KeyBinding.Category.MISC
         ));
+
+        // Load saved config on startup
+        ModConfig.load();
 
         // Register tick event for inventory monitoring and key handling
         ClientTickEvents.END_CLIENT_TICK.register(this::onClientTick);
@@ -153,5 +158,7 @@ public class RailMacrosMod implements ClientModInitializer {
         SHIELD_BREAKER.tick(client);
         SAFE_ANCHOR.tick(client);
         CRYSTAL_AURA.tick(client);
+        STUN_SLAM.tick(client);
+        AUTO_MACE.tick(client);
     }
 }
