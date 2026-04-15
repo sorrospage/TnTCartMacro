@@ -69,14 +69,14 @@ public class ModMenuScreen extends Screen {
         y += SPACING;
         if (xbowExpanded) {
             RailMacro rm = RailMacrosMod.RAIL_MACRO;
-            y = addSlider(xbowSliders, centerX, y, "Rail\u2192TNT Min", 0, 100, rm.getRailToTntMinDelay(),
-                    v -> rm.setRailToTntMinDelay((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
-            y = addSlider(xbowSliders, centerX, y, "Rail\u2192TNT Max", 0, 100, rm.getRailToTntMaxDelay(),
-                    v -> rm.setRailToTntMaxDelay((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
-            y = addSlider(xbowSliders, centerX, y, "TNT\u2192Flint Min", 0, 100, rm.getTntToFlintMinDelay(),
-                    v -> rm.setTntToFlintMinDelay((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
-            y = addSlider(xbowSliders, centerX, y, "TNT\u2192Flint Max", 0, 100, rm.getTntToFlintMaxDelay(),
-                    v -> rm.setTntToFlintMaxDelay((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
+            y = addSlider(xbowSliders, centerX, y, "Rail\u2192TNT Min", 0, 10, rm.getRailToTntMinDelay(),
+                    v -> rm.setRailToTntMinDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
+            y = addSlider(xbowSliders, centerX, y, "Rail\u2192TNT Max", 0, 10, rm.getRailToTntMaxDelay(),
+                    v -> rm.setRailToTntMaxDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
+            y = addSlider(xbowSliders, centerX, y, "TNT\u2192Flint Min", 0, 10, rm.getTntToFlintMinDelay(),
+                    v -> rm.setTntToFlintMinDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
+            y = addSlider(xbowSliders, centerX, y, "TNT\u2192Flint Max", 0, 10, rm.getTntToFlintMaxDelay(),
+                    v -> rm.setTntToFlintMaxDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
             y = addSlider(xbowSliders, centerX, y, "Bow Suppress", 0, 2000, rm.getBowSuppressionMs(),
                     v -> rm.setBowSuppressionMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
         }
