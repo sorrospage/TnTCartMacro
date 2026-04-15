@@ -76,6 +76,23 @@ public class ModMenuScreen extends Screen {
                     v -> rm.setTntToFlintMaxDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
             y = addSlider(xbowSliders, centerX, y, "Bow Suppress", 0, 2000, rm.getBowSuppressionMs(),
                     v -> rm.setBowSuppressionMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
+            // Crossbow swap toggle
+            ButtonWidget xbowSwapBtn = ButtonWidget.builder(
+                    Text.literal("Xbow Swap: " + (rm.isCrossbowSwapEnabled() ? "\u00a7aON" : "\u00a7cOFF")),
+                    button -> {
+                        rm.setCrossbowSwapEnabled(!rm.isCrossbowSwapEnabled());
+                        button.setMessage(Text.literal("Xbow Swap: " + (rm.isCrossbowSwapEnabled() ? "\u00a7aON" : "\u00a7cOFF")));
+                    }
+            ).dimensions(centerX, y, SLIDER_WIDTH, WIDGET_HEIGHT).build();
+            xbowSliders.add(xbowSwapBtn);
+            addDrawableChild(xbowSwapBtn);
+            y += SPACING;
+            if (rm.isCrossbowSwapEnabled()) {
+                y = addSlider(xbowSliders, centerX, y, "Flint\u2192Xbow Min", 0, 10, rm.getFlintToCrossbowMinDelay(),
+                        v -> rm.setFlintToCrossbowMinDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
+                y = addSlider(xbowSliders, centerX, y, "Flint\u2192Xbow Max", 0, 10, rm.getFlintToCrossbowMaxDelay(),
+                        v -> rm.setFlintToCrossbowMaxDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
+            }
         }
 
         // ===== InstaCart Macro =====
