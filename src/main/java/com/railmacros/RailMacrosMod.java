@@ -9,6 +9,8 @@ import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
 
+import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_5;
+
 public class RailMacrosMod implements ClientModInitializer {
 
     public static final RailMacro RAIL_MACRO = new RailMacro();
@@ -24,6 +26,11 @@ public class RailMacrosMod implements ClientModInitializer {
     private static KeyBinding bowMacroToggle;
     private static KeyBinding triggerBotToggle;
     private static KeyBinding menuToggle;
+    private static KeyBinding rocketUseKey;
+
+    // Track key states for edge detection (trigger once per press)
+    private boolean elytraKeyWasPressed = false;
+    private boolean rocketKeyWasPressed = false;
 
     // Track whether a screen was open last tick so we can reset counts on close
     private boolean wasScreenOpen = false;
@@ -55,6 +62,14 @@ public class RailMacrosMod implements ClientModInitializer {
         menuToggle = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.railmacros.menu",
                 GLFW.GLFW_KEY_PAUSE,
+                KeyBinding.Category.MISC
+        ));
+
+        // Register key binding for Mouse Button 5 (forward side button) for RocketUse
+        rocketUseKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.railmacros.rocket_use",
+                InputUtil.Type.MOUSE,
+                GLFW_MOUSE_BUTTON_5,
                 KeyBinding.Category.MISC
         ));
 
@@ -112,13 +127,21 @@ public class RailMacrosMod implements ClientModInitializer {
             SAFE_ANCHOR.resetCounts(client);
         }
 
-        // Handle ElytraSwap trigger: key "4" (GLFW_KEY_4)
-        if (InputUtil.isKeyPressed(client.getWindow(), GLFW.GLFW_KEY_4)) {
+        // Handle ElytraSwap trigger: key "4" — edge-detect to trigger once per press
+        boolean elytraKeyDown = InputUtil.isKeyPressed(client.getWindow(), GLFW.GLFW_KEY_4);
+        if (elytraKeyDown && !elytraKeyWasPressed) {
             ELYTRA_SWAP.trigger(client);
         }
-        // Handle RocketUse trigger: Mouse Button 5 (forward side button = GLFW_MOUSE_BUTTON_5)
-        if (InputUtil.isKeyPressed(client.getWindow(), GLFW.GLFW_MOUSE_BUTTON_5)) {
-            ROCKET_USE.trigger(client);
+        elytraKeyWasPressed = elytraKeyDown;
+
+        // Handle RocketUse trigger: Mouse Button 5 — use registered KeyBinding for mouse buttons
+        if (rocketUseKey.isPressed()) {
+            if (!rocketKeyWasPressed) {
+                ROCKET_USE.trigger(client);
+                rocketKeyWasPressed = true;
+            }
+        } else {
+            rocketKeyWasPressed = false;
         }
 
         // Tick all macros

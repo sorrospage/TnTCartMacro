@@ -106,10 +106,10 @@ public class SafeAnchor {
                     player.getInventory().setSelectedSlot(slot);
                     previousGlowstoneCount = MacroUtils.countInInventory(player, Items.GLOWSTONE);
                     state = State.GLOWSTONE_1_PENDING;
+                    framesRemaining = randomDelay();
                 } else {
                     reset(); // No glowstone available
                 }
-                framesRemaining = -1;
             }
             case GLOWSTONE_1_PENDING -> {
                 // Right-click to place first glowstone
