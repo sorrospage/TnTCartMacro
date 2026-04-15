@@ -6,7 +6,7 @@ import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
 
 /**
- * RocketUse Module: When the player presses Mouse Button 5 (forward side button),
+ * RocketUse Module: When the player presses Mouse Button 4 (back side button),
  * if firework rockets are in the hotbar, swap to them, use once, then swap back.
  *
  * Uses frame-based delays for timing between steps.
@@ -54,7 +54,7 @@ public class RocketUse {
     }
 
     /**
-     * Called when the trigger key (Mouse Button 5) is pressed.
+     * Called when the trigger key (Mouse Button 4) is pressed.
      * Initiates the rocket use sequence if conditions are met.
      */
     public void trigger(MinecraftClient client) {

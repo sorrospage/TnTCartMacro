@@ -29,6 +29,7 @@ public class ModMenuScreen extends Screen {
     private boolean safeAnchorExpanded = false;
     private boolean elytraSwapExpanded = false;
     private boolean rocketUseExpanded = false;
+    private boolean crystalAuraExpanded = false;
 
     // Track slider widgets per section so we can show/hide them
     private final List<ClickableWidget> xbowSliders = new ArrayList<>();
@@ -39,6 +40,7 @@ public class ModMenuScreen extends Screen {
     private final List<ClickableWidget> safeAnchorSliders = new ArrayList<>();
     private final List<ClickableWidget> elytraSwapSliders = new ArrayList<>();
     private final List<ClickableWidget> rocketUseSliders = new ArrayList<>();
+    private final List<ClickableWidget> crystalAuraSliders = new ArrayList<>();
 
     public ModMenuScreen() {
         super(Text.literal("Rappture Client"));
@@ -55,6 +57,7 @@ public class ModMenuScreen extends Screen {
         safeAnchorSliders.clear();
         elytraSwapSliders.clear();
         rocketUseSliders.clear();
+        crystalAuraSliders.clear();
 
         int centerX = this.width / 2 - BUTTON_WIDTH / 2;
         int halfWidth = (BUTTON_WIDTH - 4) / 2;
@@ -225,6 +228,30 @@ public class ModMenuScreen extends Screen {
                     v -> ru.setMaxDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
         }
 
+        // ===== CrystalAura =====
+        addDrawableChild(ButtonWidget.builder(getCrystalAuraText(), button -> {
+            RailMacrosMod.CRYSTAL_AURA.toggle();
+            button.setMessage(getCrystalAuraText());
+        }).dimensions(centerX, y, halfWidth, WIDGET_HEIGHT).build());
+
+        addDrawableChild(ButtonWidget.builder(
+                Text.literal(crystalAuraExpanded ? "\u00a77\u25BC Settings" : "\u00a77\u25B6 Settings"),
+                button -> { crystalAuraExpanded = !crystalAuraExpanded; clearAndInit(); }
+        ).dimensions(centerX + halfWidth + 4, y, halfWidth, WIDGET_HEIGHT).build());
+
+        y += SPACING;
+        if (crystalAuraExpanded) {
+            CrystalAura ca = RailMacrosMod.CRYSTAL_AURA;
+            y = addSlider(crystalAuraSliders, centerX, y, "Place Min", 0, 350, ca.getPlaceMinDelay(),
+                    v -> ca.setPlaceMinDelay((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
+            y = addSlider(crystalAuraSliders, centerX, y, "Place Max", 0, 350, ca.getPlaceMaxDelay(),
+                    v -> ca.setPlaceMaxDelay((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
+            y = addSlider(crystalAuraSliders, centerX, y, "Break Min", 0, 350, ca.getBreakMinDelay(),
+                    v -> ca.setBreakMinDelay((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
+            y = addSlider(crystalAuraSliders, centerX, y, "Break Max", 0, 350, ca.getBreakMaxDelay(),
+                    v -> ca.setBreakMaxDelay((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
+        }
+
         // ===== AutoSprint =====
         addDrawableChild(ButtonWidget.builder(getAutoSprintText(), button -> {
             RailMacrosMod.AUTO_SPRINT.toggle();
@@ -295,6 +322,11 @@ public class ModMenuScreen extends Screen {
     private Text getRocketUseText() {
         boolean on = RailMacrosMod.ROCKET_USE.isEnabled();
         return Text.literal("RocketUse: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
+    }
+
+    private Text getCrystalAuraText() {
+        boolean on = RailMacrosMod.CRYSTAL_AURA.isEnabled();
+        return Text.literal("CrystalAura: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
     }
 
     private Text getAutoSprintText() {
