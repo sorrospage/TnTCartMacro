@@ -6,7 +6,6 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
 
 public class RailMacrosMod implements ClientModInitializer {
@@ -15,7 +14,6 @@ public class RailMacrosMod implements ClientModInitializer {
     public static final BowMacro BOW_MACRO = new BowMacro();
     public static final TriggerBot TRIGGER_BOT = new TriggerBot();
     public static final FastPlace FAST_PLACE = new FastPlace();
-    public static final SpearMacro SPEAR_MACRO = new SpearMacro();
     public static final AutoSprint AUTO_SPRINT = new AutoSprint();
 
     private static KeyBinding railMacroToggle;
@@ -23,7 +21,6 @@ public class RailMacrosMod implements ClientModInitializer {
     private static KeyBinding triggerBotToggle;
     private static KeyBinding fastPlaceToggle;
     private static KeyBinding menuToggle;
-    private static KeyBinding spearMacroActivate;
 
     // Track whether a screen was open last tick so we can reset counts on close
     private boolean wasScreenOpen = false;
@@ -55,14 +52,6 @@ public class RailMacrosMod implements ClientModInitializer {
         fastPlaceToggle = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.railmacros.toggle_fastplace",
                 GLFW.GLFW_KEY_LEFT_BRACKET,
-                KeyBinding.Category.MISC
-        ));
-
-        // Register key binding for Middle Mouse Button to activate spear macro
-        spearMacroActivate = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.railmacros.spear_activate",
-                InputUtil.Type.MOUSE,
-                GLFW.GLFW_MOUSE_BUTTON_MIDDLE,
                 KeyBinding.Category.MISC
         ));
 
@@ -103,11 +92,6 @@ public class RailMacrosMod implements ClientModInitializer {
 
         while (fastPlaceToggle.wasPressed()) {
             FAST_PLACE.toggle();
-        }
-
-        // Handle spear macro activation (middle mouse button)
-        while (spearMacroActivate.wasPressed()) {
-            SPEAR_MACRO.onMiddleClick(client);
         }
 
         while (menuToggle.wasPressed()) {

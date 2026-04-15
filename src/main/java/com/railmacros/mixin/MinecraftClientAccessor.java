@@ -17,6 +17,4 @@ public interface MinecraftClientAccessor {
     @Invoker("doItemUse")
     void invokeDoItemUse();
 
-    @Invoker("doAttack")
-    boolean invokeDoAttack();
 }
