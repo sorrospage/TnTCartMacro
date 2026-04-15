@@ -15,6 +15,7 @@ public class RailMacrosMod implements ClientModInitializer {
     public static final TriggerBot TRIGGER_BOT = new TriggerBot();
     public static final FastPlace FAST_PLACE = new FastPlace();
     public static final SpearMacro SPEAR_MACRO = new SpearMacro();
+    public static final AutoSprint AUTO_SPRINT = new AutoSprint();
 
     private static KeyBinding railMacroToggle;
     private static KeyBinding bowMacroToggle;
@@ -127,5 +128,6 @@ public class RailMacrosMod implements ClientModInitializer {
         BOW_MACRO.tick(client);
         TRIGGER_BOT.tick(client);
         FAST_PLACE.tick(client);
+        AUTO_SPRINT.tick(client);
     }
 }

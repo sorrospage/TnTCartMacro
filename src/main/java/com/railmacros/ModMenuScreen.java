@@ -26,6 +26,7 @@ public class ModMenuScreen extends Screen {
     private boolean triggerBotExpanded = false;
     private boolean fastPlaceExpanded = false;
     private boolean spearMacroExpanded = false;
+    private boolean autoSprintExpanded = false;
 
     // Track slider widgets per section so we can show/hide them
     private final List<ClickableWidget> xbowSliders = new ArrayList<>();
@@ -33,6 +34,7 @@ public class ModMenuScreen extends Screen {
     private final List<ClickableWidget> triggerBotSliders = new ArrayList<>();
     private final List<ClickableWidget> fastPlaceSliders = new ArrayList<>();
     private final List<ClickableWidget> spearMacroSliders = new ArrayList<>();
+    private final List<ClickableWidget> autoSprintSliders = new ArrayList<>();
 
     public ModMenuScreen() {
         super(Text.literal("Modules"));
@@ -46,6 +48,7 @@ public class ModMenuScreen extends Screen {
         triggerBotSliders.clear();
         fastPlaceSliders.clear();
         spearMacroSliders.clear();
+        autoSprintSliders.clear();
 
         int centerX = this.width / 2 - BUTTON_WIDTH / 2;
         int halfWidth = (BUTTON_WIDTH - 4) / 2;
@@ -148,10 +151,10 @@ public class ModMenuScreen extends Screen {
         y += SPACING;
         if (fastPlaceExpanded) {
             FastPlace fp = RailMacrosMod.FAST_PLACE;
-            y = addSlider(fastPlaceSliders, centerX, y, "Min Delay", 0, 500, fp.getMinDelayMs(),
-                    v -> fp.setMinDelayMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
-            y = addSlider(fastPlaceSliders, centerX, y, "Max Delay", 0, 500, fp.getMaxDelayMs(),
-                    v -> fp.setMaxDelayMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
+            y = addSlider(fastPlaceSliders, centerX, y, "Min Delay", 0, 3, fp.getMinDelayTicks(),
+                    v -> fp.setMinDelayTicks((int) Math.round(v)), v -> String.format("%dt", (int) Math.round(v)));
+            y = addSlider(fastPlaceSliders, centerX, y, "Max Delay", 0, 3, fp.getMaxDelayTicks(),
+                    v -> fp.setMaxDelayTicks((int) Math.round(v)), v -> String.format("%dt", (int) Math.round(v)));
             // Half-tick toggle button
             ButtonWidget halfTickBtn = ButtonWidget.builder(
                     Text.literal("Half Tick: " + (fp.isHalfTick() ? "\u00a7aON" : "\u00a7cOFF")),
@@ -185,6 +188,14 @@ public class ModMenuScreen extends Screen {
             y = addSlider(spearMacroSliders, centerX, y, "Swap-Back Delay", 0, 500, sm.getSwapBackDelayMs(),
                     v -> sm.setSwapBackDelayMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
         }
+
+        // ===== AutoSprint =====
+        addDrawableChild(ButtonWidget.builder(getAutoSprintText(), button -> {
+            RailMacrosMod.AUTO_SPRINT.toggle();
+            button.setMessage(getAutoSprintText());
+        }).dimensions(centerX, y, BUTTON_WIDTH, WIDGET_HEIGHT).build());
+
+        y += SPACING;
     }
 
     private int addSlider(List<ClickableWidget> list, int x, int y, String label,
@@ -232,5 +243,10 @@ public class ModMenuScreen extends Screen {
     private Text getSpearMacroText() {
         boolean on = RailMacrosMod.SPEAR_MACRO.isEnabled();
         return Text.literal("Spear Macro: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
+    }
+
+    private Text getAutoSprintText() {
+        boolean on = RailMacrosMod.AUTO_SPRINT.isEnabled();
+        return Text.literal("AutoSprint: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
     }
 }

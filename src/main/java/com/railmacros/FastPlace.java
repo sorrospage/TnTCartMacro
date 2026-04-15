@@ -14,24 +14,24 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * FastPlace Module: When holding right-click, repeats right-click input
- * at a configurable delay interval (randomized between min and max ms).
+ * at a configurable tick-based delay interval (randomized between min and max ticks, 0-3).
  * Supports half-tick mode for ~25ms placement intervals.
  */
 public class FastPlace {
 
     private boolean enabled = false;
 
-    // Configurable delay range (ms)
-    private int minDelayMs = 0;
-    private int maxDelayMs = 50;
+    // Configurable delay range (ticks, 0-3)
+    private int minDelayTicks = 0;
+    private int maxDelayTicks = 1;
 
     // Half-tick mode: places between ticks for ~25ms intervals
     private boolean halfTick = false;
 
     // Internal state
     private boolean wasHoldingUse = false;
-    private long lastPlaceTimeMs = 0;
-    private int currentDelayMs = 0;
+    private int ticksSinceLastPlace = 0;
+    private int currentDelayTicks = 0;
 
     // Scheduler for half-tick placement
     private static final ScheduledExecutorService SCHEDULER =
@@ -52,11 +52,11 @@ public class FastPlace {
         cancelHalfTickTask();
     }
 
-    public int getMinDelayMs() { return minDelayMs; }
-    public void setMinDelayMs(int v) { minDelayMs = Math.max(0, Math.min(v, maxDelayMs)); }
+    public int getMinDelayTicks() { return minDelayTicks; }
+    public void setMinDelayTicks(int v) { minDelayTicks = Math.max(0, Math.min(v, maxDelayTicks)); }
 
-    public int getMaxDelayMs() { return maxDelayMs; }
-    public void setMaxDelayMs(int v) { maxDelayMs = Math.max(minDelayMs, Math.min(500, v)); }
+    public int getMaxDelayTicks() { return maxDelayTicks; }
+    public void setMaxDelayTicks(int v) { maxDelayTicks = Math.max(minDelayTicks, Math.min(3, v)); }
 
     public boolean isHalfTick() { return halfTick; }
     public void setHalfTick(boolean v) { halfTick = v; }
@@ -96,21 +96,23 @@ public class FastPlace {
         boolean holdingUse = client.options.useKey.isPressed();
 
         if (holdingUse) {
-            long now = System.currentTimeMillis();
             if (!wasHoldingUse) {
                 // Just started holding - initialize timing
                 wasHoldingUse = true;
-                lastPlaceTimeMs = now;
-                currentDelayMs = randomDelay();
-            } else if (now - lastPlaceTimeMs >= currentDelayMs) {
-                // Enough time has passed - allow the next right-click by resetting cooldown
-                ((MinecraftClientAccessor) client).setItemUseCooldown(0);
-                lastPlaceTimeMs = now;
-                currentDelayMs = randomDelay();
+                ticksSinceLastPlace = 0;
+                currentDelayTicks = randomDelay();
+            } else {
+                ticksSinceLastPlace++;
+                if (ticksSinceLastPlace >= currentDelayTicks) {
+                    // Enough ticks have passed - allow the next right-click by resetting cooldown
+                    ((MinecraftClientAccessor) client).setItemUseCooldown(0);
+                    ticksSinceLastPlace = 0;
+                    currentDelayTicks = randomDelay();
 
-                // Schedule a mid-tick placement if half-tick mode is on
-                if (halfTick) {
-                    scheduleHalfTickPlace(client);
+                    // Schedule a mid-tick placement if half-tick mode is on
+                    if (halfTick) {
+                        scheduleHalfTickPlace(client);
+                    }
                 }
             }
         } else {
@@ -140,7 +142,7 @@ public class FastPlace {
     }
 
     private int randomDelay() {
-        if (minDelayMs >= maxDelayMs) return minDelayMs;
-        return ThreadLocalRandom.current().nextInt(minDelayMs, maxDelayMs + 1);
+        if (minDelayTicks >= maxDelayTicks) return minDelayTicks;
+        return ThreadLocalRandom.current().nextInt(minDelayTicks, maxDelayTicks + 1);
     }
 }
