@@ -6,6 +6,7 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
 
 public class RailMacrosMod implements ClientModInitializer {
@@ -15,6 +16,9 @@ public class RailMacrosMod implements ClientModInitializer {
     public static final TriggerBot TRIGGER_BOT = new TriggerBot();
     public static final AutoSprint AUTO_SPRINT = new AutoSprint();
     public static final ShieldBreaker SHIELD_BREAKER = new ShieldBreaker();
+    public static final SafeAnchor SAFE_ANCHOR = new SafeAnchor();
+    public static final ElytraSwap ELYTRA_SWAP = new ElytraSwap();
+    public static final RocketUse ROCKET_USE = new RocketUse();
 
     private static KeyBinding railMacroToggle;
     private static KeyBinding bowMacroToggle;
@@ -62,6 +66,9 @@ public class RailMacrosMod implements ClientModInitializer {
             MinecraftClient mc = MinecraftClient.getInstance();
             if (mc.player != null) {
                 RAIL_MACRO.onFrame(mc);
+                SAFE_ANCHOR.onFrame(mc);
+                ELYTRA_SWAP.onFrame(mc);
+                ROCKET_USE.onFrame(mc);
             }
         });
     }
@@ -102,6 +109,16 @@ public class RailMacrosMod implements ClientModInitializer {
             wasScreenOpen = false;
             RAIL_MACRO.resetCounts(client);
             BOW_MACRO.resetCounts(client);
+            SAFE_ANCHOR.resetCounts(client);
+        }
+
+        // Handle ElytraSwap trigger: key "4" (GLFW_KEY_4)
+        if (InputUtil.isKeyPressed(client.getWindow(), GLFW.GLFW_KEY_4)) {
+            ELYTRA_SWAP.trigger(client);
+        }
+        // Handle RocketUse trigger: Mouse Button 5 (forward side button = GLFW_MOUSE_BUTTON_5)
+        if (InputUtil.isKeyPressed(client.getWindow(), GLFW.GLFW_MOUSE_BUTTON_5)) {
+            ROCKET_USE.trigger(client);
         }
 
         // Tick all macros
@@ -110,5 +127,6 @@ public class RailMacrosMod implements ClientModInitializer {
         TRIGGER_BOT.tick(client);
         AUTO_SPRINT.tick(client);
         SHIELD_BREAKER.tick(client);
+        SAFE_ANCHOR.tick(client);
     }
 }

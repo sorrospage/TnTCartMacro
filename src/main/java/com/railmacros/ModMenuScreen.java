@@ -26,6 +26,9 @@ public class ModMenuScreen extends Screen {
     private boolean triggerBotExpanded = false;
     private boolean autoSprintExpanded = false;
     private boolean shieldBreakerExpanded = false;
+    private boolean safeAnchorExpanded = false;
+    private boolean elytraSwapExpanded = false;
+    private boolean rocketUseExpanded = false;
 
     // Track slider widgets per section so we can show/hide them
     private final List<ClickableWidget> xbowSliders = new ArrayList<>();
@@ -33,6 +36,9 @@ public class ModMenuScreen extends Screen {
     private final List<ClickableWidget> triggerBotSliders = new ArrayList<>();
     private final List<ClickableWidget> autoSprintSliders = new ArrayList<>();
     private final List<ClickableWidget> shieldBreakerSliders = new ArrayList<>();
+    private final List<ClickableWidget> safeAnchorSliders = new ArrayList<>();
+    private final List<ClickableWidget> elytraSwapSliders = new ArrayList<>();
+    private final List<ClickableWidget> rocketUseSliders = new ArrayList<>();
 
     public ModMenuScreen() {
         super(Text.literal("Rappture Client"));
@@ -46,6 +52,9 @@ public class ModMenuScreen extends Screen {
         triggerBotSliders.clear();
         autoSprintSliders.clear();
         shieldBreakerSliders.clear();
+        safeAnchorSliders.clear();
+        elytraSwapSliders.clear();
+        rocketUseSliders.clear();
 
         int centerX = this.width / 2 - BUTTON_WIDTH / 2;
         int halfWidth = (BUTTON_WIDTH - 4) / 2;
@@ -76,23 +85,6 @@ public class ModMenuScreen extends Screen {
                     v -> rm.setTntToFlintMaxDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
             y = addSlider(xbowSliders, centerX, y, "Bow Suppress", 0, 2000, rm.getBowSuppressionMs(),
                     v -> rm.setBowSuppressionMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
-            // Crossbow swap toggle
-            ButtonWidget xbowSwapBtn = ButtonWidget.builder(
-                    Text.literal("Xbow Swap: " + (rm.isCrossbowSwapEnabled() ? "\u00a7aON" : "\u00a7cOFF")),
-                    button -> {
-                        rm.setCrossbowSwapEnabled(!rm.isCrossbowSwapEnabled());
-                        button.setMessage(Text.literal("Xbow Swap: " + (rm.isCrossbowSwapEnabled() ? "\u00a7aON" : "\u00a7cOFF")));
-                    }
-            ).dimensions(centerX, y, SLIDER_WIDTH, WIDGET_HEIGHT).build();
-            xbowSliders.add(xbowSwapBtn);
-            addDrawableChild(xbowSwapBtn);
-            y += SPACING;
-            if (rm.isCrossbowSwapEnabled()) {
-                y = addSlider(xbowSliders, centerX, y, "Flint\u2192Xbow Min", 0, 10, rm.getFlintToCrossbowMinDelay(),
-                        v -> rm.setFlintToCrossbowMinDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
-                y = addSlider(xbowSliders, centerX, y, "Flint\u2192Xbow Max", 0, 10, rm.getFlintToCrossbowMaxDelay(),
-                        v -> rm.setFlintToCrossbowMaxDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
-            }
         }
 
         // ===== InstaCart Macro =====
@@ -173,6 +165,66 @@ public class ModMenuScreen extends Screen {
                     v -> sb.setMaxDelayMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
         }
 
+        // ===== SafeAnchor =====
+        addDrawableChild(ButtonWidget.builder(getSafeAnchorText(), button -> {
+            RailMacrosMod.SAFE_ANCHOR.toggle();
+            button.setMessage(getSafeAnchorText());
+        }).dimensions(centerX, y, halfWidth, WIDGET_HEIGHT).build());
+
+        addDrawableChild(ButtonWidget.builder(
+                Text.literal(safeAnchorExpanded ? "\u00a77\u25BC Settings" : "\u00a77\u25B6 Settings"),
+                button -> { safeAnchorExpanded = !safeAnchorExpanded; clearAndInit(); }
+        ).dimensions(centerX + halfWidth + 4, y, halfWidth, WIDGET_HEIGHT).build());
+
+        y += SPACING;
+        if (safeAnchorExpanded) {
+            SafeAnchor sa = RailMacrosMod.SAFE_ANCHOR;
+            y = addSlider(safeAnchorSliders, centerX, y, "Min Delay", 0, 10, sa.getMinDelay(),
+                    v -> sa.setMinDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
+            y = addSlider(safeAnchorSliders, centerX, y, "Max Delay", 0, 10, sa.getMaxDelay(),
+                    v -> sa.setMaxDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
+        }
+
+        // ===== ElytraSwap =====
+        addDrawableChild(ButtonWidget.builder(getElytraSwapText(), button -> {
+            RailMacrosMod.ELYTRA_SWAP.toggle();
+            button.setMessage(getElytraSwapText());
+        }).dimensions(centerX, y, halfWidth, WIDGET_HEIGHT).build());
+
+        addDrawableChild(ButtonWidget.builder(
+                Text.literal(elytraSwapExpanded ? "\u00a77\u25BC Settings" : "\u00a77\u25B6 Settings"),
+                button -> { elytraSwapExpanded = !elytraSwapExpanded; clearAndInit(); }
+        ).dimensions(centerX + halfWidth + 4, y, halfWidth, WIDGET_HEIGHT).build());
+
+        y += SPACING;
+        if (elytraSwapExpanded) {
+            ElytraSwap es = RailMacrosMod.ELYTRA_SWAP;
+            y = addSlider(elytraSwapSliders, centerX, y, "Min Delay", 0, 10, es.getMinDelay(),
+                    v -> es.setMinDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
+            y = addSlider(elytraSwapSliders, centerX, y, "Max Delay", 0, 10, es.getMaxDelay(),
+                    v -> es.setMaxDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
+        }
+
+        // ===== RocketUse =====
+        addDrawableChild(ButtonWidget.builder(getRocketUseText(), button -> {
+            RailMacrosMod.ROCKET_USE.toggle();
+            button.setMessage(getRocketUseText());
+        }).dimensions(centerX, y, halfWidth, WIDGET_HEIGHT).build());
+
+        addDrawableChild(ButtonWidget.builder(
+                Text.literal(rocketUseExpanded ? "\u00a77\u25BC Settings" : "\u00a77\u25B6 Settings"),
+                button -> { rocketUseExpanded = !rocketUseExpanded; clearAndInit(); }
+        ).dimensions(centerX + halfWidth + 4, y, halfWidth, WIDGET_HEIGHT).build());
+
+        y += SPACING;
+        if (rocketUseExpanded) {
+            RocketUse ru = RailMacrosMod.ROCKET_USE;
+            y = addSlider(rocketUseSliders, centerX, y, "Min Delay", 0, 10, ru.getMinDelay(),
+                    v -> ru.setMinDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
+            y = addSlider(rocketUseSliders, centerX, y, "Max Delay", 0, 10, ru.getMaxDelay(),
+                    v -> ru.setMaxDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
+        }
+
         // ===== AutoSprint =====
         addDrawableChild(ButtonWidget.builder(getAutoSprintText(), button -> {
             RailMacrosMod.AUTO_SPRINT.toggle();
@@ -196,7 +248,13 @@ public class ModMenuScreen extends Screen {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
-        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 14, 0xFFFFFF);
+        // Draw "Rappture Client" title prominently at top
+        int titleWidth = this.textRenderer.getWidth(this.title);
+        int titleX = this.width / 2 - titleWidth / 2;
+        int titleY = 10;
+        // Draw dark background behind title for visibility
+        context.fill(titleX - 4, titleY - 2, titleX + titleWidth + 4, titleY + 12, 0xAA000000);
+        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, titleY, 0xFFFFFF);
     }
 
     @Override
@@ -222,6 +280,21 @@ public class ModMenuScreen extends Screen {
     private Text getShieldBreakerText() {
         boolean on = RailMacrosMod.SHIELD_BREAKER.isEnabled();
         return Text.literal("ShieldBreaker: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
+    }
+
+    private Text getSafeAnchorText() {
+        boolean on = RailMacrosMod.SAFE_ANCHOR.isEnabled();
+        return Text.literal("SafeAnchor: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
+    }
+
+    private Text getElytraSwapText() {
+        boolean on = RailMacrosMod.ELYTRA_SWAP.isEnabled();
+        return Text.literal("ElytraSwap: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
+    }
+
+    private Text getRocketUseText() {
+        boolean on = RailMacrosMod.ROCKET_USE.isEnabled();
+        return Text.literal("RocketUse: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
     }
 
     private Text getAutoSprintText() {
