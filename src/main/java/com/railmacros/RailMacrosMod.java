@@ -14,6 +14,7 @@ public class RailMacrosMod implements ClientModInitializer {
     public static final BowMacro BOW_MACRO = new BowMacro();
     public static final TriggerBot TRIGGER_BOT = new TriggerBot();
     public static final AutoSprint AUTO_SPRINT = new AutoSprint();
+    public static final ShieldBreaker SHIELD_BREAKER = new ShieldBreaker();
 
     private static KeyBinding railMacroToggle;
     private static KeyBinding bowMacroToggle;
@@ -108,5 +109,6 @@ public class RailMacrosMod implements ClientModInitializer {
         BOW_MACRO.tick(client);
         TRIGGER_BOT.tick(client);
         AUTO_SPRINT.tick(client);
+        SHIELD_BREAKER.tick(client);
     }
 }

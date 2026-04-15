@@ -25,12 +25,14 @@ public class ModMenuScreen extends Screen {
     private boolean instaCartExpanded = false;
     private boolean triggerBotExpanded = false;
     private boolean autoSprintExpanded = false;
+    private boolean shieldBreakerExpanded = false;
 
     // Track slider widgets per section so we can show/hide them
     private final List<ClickableWidget> xbowSliders = new ArrayList<>();
     private final List<ClickableWidget> instaCartSliders = new ArrayList<>();
     private final List<ClickableWidget> triggerBotSliders = new ArrayList<>();
     private final List<ClickableWidget> autoSprintSliders = new ArrayList<>();
+    private final List<ClickableWidget> shieldBreakerSliders = new ArrayList<>();
 
     public ModMenuScreen() {
         super(Text.literal("Modules"));
@@ -43,6 +45,7 @@ public class ModMenuScreen extends Screen {
         instaCartSliders.clear();
         triggerBotSliders.clear();
         autoSprintSliders.clear();
+        shieldBreakerSliders.clear();
 
         int centerX = this.width / 2 - BUTTON_WIDTH / 2;
         int halfWidth = (BUTTON_WIDTH - 4) / 2;
@@ -131,6 +134,28 @@ public class ModMenuScreen extends Screen {
                     v -> tb.setSweepCooldownMax(v.floatValue()), v -> String.format("%.0f%%", v * 100));
         }
 
+        // ===== ShieldBreaker =====
+        addDrawableChild(ButtonWidget.builder(getShieldBreakerText(), button -> {
+            RailMacrosMod.SHIELD_BREAKER.toggle();
+            button.setMessage(getShieldBreakerText());
+        }).dimensions(centerX, y, halfWidth, WIDGET_HEIGHT).build());
+
+        addDrawableChild(ButtonWidget.builder(
+                Text.literal(shieldBreakerExpanded ? "\u00a77\u25BC Settings" : "\u00a77\u25B6 Settings"),
+                button -> { shieldBreakerExpanded = !shieldBreakerExpanded; clearAndInit(); }
+        ).dimensions(centerX + halfWidth + 4, y, halfWidth, WIDGET_HEIGHT).build());
+
+        y += SPACING;
+        if (shieldBreakerExpanded) {
+            ShieldBreaker sb = RailMacrosMod.SHIELD_BREAKER;
+            y = addSlider(shieldBreakerSliders, centerX, y, "Miss Chance", 0.0, 0.50, sb.getMissChance(),
+                    sb::setMissChance, v -> String.format("%.0f%%", v * 100));
+            y = addSlider(shieldBreakerSliders, centerX, y, "Min Delay", 0, 500, sb.getMinDelayMs(),
+                    v -> sb.setMinDelayMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
+            y = addSlider(shieldBreakerSliders, centerX, y, "Max Delay", 0, 500, sb.getMaxDelayMs(),
+                    v -> sb.setMaxDelayMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
+        }
+
         // ===== AutoSprint =====
         addDrawableChild(ButtonWidget.builder(getAutoSprintText(), button -> {
             RailMacrosMod.AUTO_SPRINT.toggle();
@@ -175,6 +200,11 @@ public class ModMenuScreen extends Screen {
     private Text getTriggerBotText() {
         boolean on = RailMacrosMod.TRIGGER_BOT.isEnabled();
         return Text.literal("TriggerBot: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
+    }
+
+    private Text getShieldBreakerText() {
+        boolean on = RailMacrosMod.SHIELD_BREAKER.isEnabled();
+        return Text.literal("ShieldBreaker: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
     }
 
     private Text getAutoSprintText() {
