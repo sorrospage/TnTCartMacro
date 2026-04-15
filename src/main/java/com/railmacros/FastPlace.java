@@ -61,13 +61,28 @@ public class FastPlace {
     public boolean isHalfTick() { return halfTick; }
     public void setHalfTick(boolean v) { halfTick = v; }
 
+    /** Returns true if the held item is a loaded crossbow (needs cooldown-only mode, no doItemUse). */
+    private boolean isLoadedCrossbow(MinecraftClient client) {
+        ItemStack stack = client.player.getMainHandStack();
+        if (stack.isEmpty()) return false;
+        if (stack.getItem() != Items.CROSSBOW) return false;
+        net.minecraft.component.type.ChargedProjectilesComponent charged =
+                stack.getComponents().get(net.minecraft.component.DataComponentTypes.CHARGED_PROJECTILES);
+        return charged != null && !charged.isEmpty();
+    }
+
     /** Returns true if the held item should not be fast-placed (chargeable, edible, or throwable). */
     private boolean shouldSkipItem(MinecraftClient client) {
         ItemStack stack = client.player.getMainHandStack();
         if (stack.isEmpty()) return false;
         Item item = stack.getItem();
-        // Always skip crossbows — doItemUse() bypasses the reload cycle and causes auto-fire
-        if (item == Items.CROSSBOW) return true;
+        // Crossbow: skip only if unloaded (reloading). Allow fast-fire when loaded.
+        if (item == Items.CROSSBOW) {
+            net.minecraft.component.type.ChargedProjectilesComponent charged =
+                    stack.getComponents().get(net.minecraft.component.DataComponentTypes.CHARGED_PROJECTILES);
+            // Skip if unloaded (no projectiles or empty component)
+            return charged == null || charged.isEmpty();
+        }
         // Other chargeable items — always skip
         if (item == Items.BOW || item == Items.TRIDENT || item == Items.SHIELD) return true;
         // Experience bottle
@@ -96,22 +111,29 @@ public class FastPlace {
                 wasHoldingUse = true;
                 ticksSinceLastPlace = 0;
                 currentDelayTicks = randomDelay();
+                boolean crossbow = isLoadedCrossbow(client);
                 ((MinecraftClientAccessor) client).setItemUseCooldown(0);
-                ((MinecraftClientAccessor) client).invokeDoItemUse();
-                if (halfTick) {
+                // Don't call doItemUse for crossbows — it bypasses reload and causes auto-fire
+                if (!crossbow) {
+                    ((MinecraftClientAccessor) client).invokeDoItemUse();
+                }
+                if (halfTick && !crossbow) {
                     scheduleHalfTickPlace(client);
                 }
             } else {
                 ticksSinceLastPlace++;
                 if (ticksSinceLastPlace >= currentDelayTicks) {
                     // Enough ticks have passed - reset cooldown and trigger placement
+                    boolean crossbow = isLoadedCrossbow(client);
                     ((MinecraftClientAccessor) client).setItemUseCooldown(0);
-                    ((MinecraftClientAccessor) client).invokeDoItemUse();
+                    if (!crossbow) {
+                        ((MinecraftClientAccessor) client).invokeDoItemUse();
+                    }
                     ticksSinceLastPlace = 0;
                     currentDelayTicks = randomDelay();
 
                     // Schedule a mid-tick placement if half-tick mode is on
-                    if (halfTick) {
+                    if (halfTick && !crossbow) {
                         scheduleHalfTickPlace(client);
                     }
                 }
