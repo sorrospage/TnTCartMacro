@@ -25,12 +25,14 @@ public class ModMenuScreen extends Screen {
     private boolean instaCartExpanded = false;
     private boolean triggerBotExpanded = false;
     private boolean fastPlaceExpanded = false;
+    private boolean spearMacroExpanded = false;
 
     // Track slider widgets per section so we can show/hide them
     private final List<ClickableWidget> xbowSliders = new ArrayList<>();
     private final List<ClickableWidget> instaCartSliders = new ArrayList<>();
     private final List<ClickableWidget> triggerBotSliders = new ArrayList<>();
     private final List<ClickableWidget> fastPlaceSliders = new ArrayList<>();
+    private final List<ClickableWidget> spearMacroSliders = new ArrayList<>();
 
     public ModMenuScreen() {
         super(Text.literal("Modules"));
@@ -43,6 +45,7 @@ public class ModMenuScreen extends Screen {
         instaCartSliders.clear();
         triggerBotSliders.clear();
         fastPlaceSliders.clear();
+        spearMacroSliders.clear();
 
         int centerX = this.width / 2 - BUTTON_WIDTH / 2;
         int halfWidth = (BUTTON_WIDTH - 4) / 2;
@@ -161,6 +164,27 @@ public class ModMenuScreen extends Screen {
             addDrawableChild(halfTickBtn);
             y += SPACING;
         }
+        // ===== Spear Macro =====
+        addDrawableChild(ButtonWidget.builder(getSpearMacroText(), button -> {
+            RailMacrosMod.SPEAR_MACRO.toggle();
+            button.setMessage(getSpearMacroText());
+        }).dimensions(centerX, y, halfWidth, WIDGET_HEIGHT).build());
+
+        addDrawableChild(ButtonWidget.builder(
+                Text.literal(spearMacroExpanded ? "\u00a77\u25BC Settings" : "\u00a77\u25B6 Settings"),
+                button -> { spearMacroExpanded = !spearMacroExpanded; clearAndInit(); }
+        ).dimensions(centerX + halfWidth + 4, y, halfWidth, WIDGET_HEIGHT).build());
+
+        y += SPACING;
+        if (spearMacroExpanded) {
+            SpearMacro sm = RailMacrosMod.SPEAR_MACRO;
+            y = addSlider(spearMacroSliders, centerX, y, "Pre-Swap Delay", 0, 500, sm.getPreSwapDelayMs(),
+                    v -> sm.setPreSwapDelayMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
+            y = addSlider(spearMacroSliders, centerX, y, "Attack Delay", 0, 500, sm.getAttackDelayMs(),
+                    v -> sm.setAttackDelayMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
+            y = addSlider(spearMacroSliders, centerX, y, "Swap-Back Delay", 0, 500, sm.getSwapBackDelayMs(),
+                    v -> sm.setSwapBackDelayMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
+        }
     }
 
     private int addSlider(List<ClickableWidget> list, int x, int y, String label,
@@ -203,5 +227,10 @@ public class ModMenuScreen extends Screen {
     private Text getFastPlaceText() {
         boolean on = RailMacrosMod.FAST_PLACE.isEnabled();
         return Text.literal("FastPlace: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
+    }
+
+    private Text getSpearMacroText() {
+        boolean on = RailMacrosMod.SPEAR_MACRO.isEnabled();
+        return Text.literal("Spear Macro: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
     }
 }
