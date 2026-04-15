@@ -1,11 +1,11 @@
 package com.railmacros;
 
+import com.railmacros.mixin.MinecraftClientAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
-import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
@@ -141,22 +141,20 @@ public class SpearMacro {
                 p.getInventory().setSelectedSlot(spearSlot);
                 LOGGER.info("[SpearMacro] Swapped to spear (slot {})", spearSlot);
 
-                // Step 2: After attack delay, left click (attack)
+                // Step 2: After attack delay, simulate a full left click to trigger spear lunge
                 SCHEDULER.schedule(() -> {
                     client.execute(() -> {
                         if (!enabled) { actionPending = false; return; }
                         ClientPlayerEntity p2 = client.player;
-                        if (p2 == null || client.interactionManager == null) {
+                        if (p2 == null) {
                             actionPending = false;
                             return;
                         }
 
-                        // Attack the targeted entity if there is one, otherwise swing
-                        if (client.targetedEntity != null && client.targetedEntity.isAlive()) {
-                            client.interactionManager.attackEntity(p2, client.targetedEntity);
-                        }
-                        p2.swingHand(Hand.MAIN_HAND);
-                        LOGGER.info("[SpearMacro] Attacked");
+                        // Use doAttack() to simulate a real left click - this triggers
+                        // the spear's lunge mechanic properly
+                        ((MinecraftClientAccessor) client).invokeDoAttack();
+                        LOGGER.info("[SpearMacro] Left click (lunge) triggered");
 
                         // Step 3: After swap-back delay, swap back to original slot
                         SCHEDULER.schedule(() -> {
