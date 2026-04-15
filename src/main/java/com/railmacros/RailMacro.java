@@ -30,14 +30,12 @@ public class RailMacro {
     private Item pendingSwapItem = null;
     private int pendingSwapFramesRemaining = -1;
 
-    // Crossbow swap feature: after flint & steel use, swap to loaded crossbow
+    // Crossbow swap feature: after flint & steel swap completes, swap to loaded crossbow
     private boolean crossbowSwapEnabled = false;
     private int flintToCrossbowMinDelay = 0;
     private int flintToCrossbowMaxDelay = 2;
-    // Tracks whether we're waiting for flint & steel to be used after swapping to it
-    private boolean waitingForFlintUse = false;
-    // Track flint & steel durability to detect usage
-    private int previousFlintDurability = -1;
+    // When true, the next flint swap completion will chain into a crossbow swap
+    private boolean pendingCrossbowSwap = false;
 
     private static final Item[] RAIL_ITEMS = {
             Items.RAIL,
@@ -96,8 +94,7 @@ public class RailMacro {
         previousCounts.clear();
         pendingSwapItem = null;
         pendingSwapFramesRemaining = -1;
-        waitingForFlintUse = false;
-        previousFlintDurability = -1;
+        pendingCrossbowSwap = false;
     }
 
     /**
@@ -125,13 +122,27 @@ public class RailMacro {
         if (player == null) return;
 
         if (pendingSwapFramesRemaining <= 0) {
-            // Swap now
-            int slot = MacroUtils.findHotbarSlot(player, pendingSwapItem);
-            if (slot != -1) {
-                player.getInventory().setSelectedSlot(slot);
+            // Check if this is a flint swap that should chain to crossbow
+            boolean wasFlintSwap = pendingCrossbowSwap && pendingSwapItem == Items.FLINT_AND_STEEL;
+
+            // Swap now — use exact slot for crossbow, findHotbarSlot for everything else
+            if (pendingSwapItem == Items.CROSSBOW && pendingCrossbowSlot >= 0) {
+                player.getInventory().setSelectedSlot(pendingCrossbowSlot);
+                pendingCrossbowSlot = -1;
+            } else {
+                int slot = MacroUtils.findHotbarSlot(player, pendingSwapItem);
+                if (slot != -1) {
+                    player.getInventory().setSelectedSlot(slot);
+                }
             }
             pendingSwapItem = null;
             pendingSwapFramesRemaining = -1;
+
+            // Chain: after flint swap completes, queue crossbow swap
+            if (wasFlintSwap) {
+                pendingCrossbowSwap = false;
+                queueCrossbowSwap(player);
+            }
         } else {
             pendingSwapFramesRemaining--;
         }
@@ -166,33 +177,11 @@ public class RailMacro {
                     // Queue swap to flint_and_steel
                     queueSwap(Items.FLINT_AND_STEEL, tntToFlintMinDelay, tntToFlintMaxDelay);
                     if (crossbowSwapEnabled) {
-                        waitingForFlintUse = true;
-                        previousFlintDurability = -1; // Will be set on next tick
+                        pendingCrossbowSwap = true;
                     }
             }
         }
         previousCounts.put(Items.TNT_MINECART, tntMinecartCount);
-
-        // Crossbow swap: detect flint & steel usage by durability change
-        if (crossbowSwapEnabled && waitingForFlintUse) {
-            ItemStack heldStack = player.getMainHandStack();
-            if (heldStack.getItem() == Items.FLINT_AND_STEEL) {
-                int currentDurability = heldStack.getDamage();
-                if (previousFlintDurability == -1) {
-                    // First tick after swap — record initial durability
-                    previousFlintDurability = currentDurability;
-                } else if (currentDurability > previousFlintDurability) {
-                    // Durability increased (damage went up) — flint was used
-                    waitingForFlintUse = false;
-                    previousFlintDurability = -1;
-                    queueCrossbowSwap(player);
-                }
-            } else if (heldStack.getItem() != Items.FLINT_AND_STEEL && pendingSwapItem == null) {
-                // Player manually swapped away from flint — cancel waiting
-                waitingForFlintUse = false;
-                previousFlintDurability = -1;
-            }
-        }
     }
 
     /**
@@ -206,8 +195,11 @@ public class RailMacro {
         pendingSwapFramesRemaining = delayFrames;
     }
 
+    // Pending crossbow slot swap (by exact slot, not item type)
+    private int pendingCrossbowSlot = -1;
+
     /**
-     * Find and queue a swap to a loaded crossbow in the hotbar.
+     * Find a loaded crossbow in the hotbar and queue a swap to its exact slot.
      */
     private void queueCrossbowSwap(ClientPlayerEntity player) {
         for (int i = 0; i < 9; i++) {
@@ -215,8 +207,12 @@ public class RailMacro {
             if (stack.getItem() == Items.CROSSBOW) {
                 ChargedProjectilesComponent charged = stack.get(DataComponentTypes.CHARGED_PROJECTILES);
                 if (charged != null && !charged.isEmpty()) {
-                    // Found a loaded crossbow — queue swap to it
-                    queueSwap(Items.CROSSBOW, flintToCrossbowMinDelay, flintToCrossbowMaxDelay);
+                    // Found a loaded crossbow — queue swap to its exact slot
+                    int delayFrames = java.util.concurrent.ThreadLocalRandom.current()
+                            .nextInt(flintToCrossbowMinDelay, flintToCrossbowMaxDelay + 1);
+                    pendingCrossbowSlot = i;
+                    pendingSwapItem = Items.CROSSBOW; // marker for frame processing
+                    pendingSwapFramesRemaining = delayFrames;
                     return;
                 }
             }
