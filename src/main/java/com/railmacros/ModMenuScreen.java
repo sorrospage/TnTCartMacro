@@ -35,7 +35,7 @@ public class ModMenuScreen extends Screen {
     private final List<ClickableWidget> shieldBreakerSliders = new ArrayList<>();
 
     public ModMenuScreen() {
-        super(Text.literal("Modules"));
+        super(Text.literal("Rappture Client"));
     }
 
     @Override
