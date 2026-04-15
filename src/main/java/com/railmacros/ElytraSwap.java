@@ -2,12 +2,15 @@ package com.railmacros;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.Items;
 import net.minecraft.screen.slot.SlotActionType;
 
 /**
- * ElytraSwap Module: When the player presses "4", if an elytra is in the hotbar,
- * swap to it, equip it (swap with chestplate slot), then swap back to the previous slot.
+ * ElytraSwap Module: When the player presses "4", toggles elytra equip/unequip.
+ *
+ * If elytra is in the hotbar: swap to it, equip it (swap with chestplate slot), swap back.
+ * If elytra is already worn in chest armor slot: unequip it back to the hotbar, swap back.
  *
  * Uses frame-based delays for timing between steps.
  * Toggled from menu only (keybind "4" is the trigger, not the toggle).
@@ -23,9 +26,10 @@ public class ElytraSwap {
     // State machine
     private enum State {
         IDLE,
-        SWAP_TO_ELYTRA,    // Waiting to swap hotbar selection to elytra
+        SWAP_TO_ELYTRA,    // Waiting to swap hotbar selection to elytra (equip path)
         EQUIP_ELYTRA,      // Waiting to equip elytra into chest slot
-        SWAP_BACK           // Waiting to swap back to previous slot
+        SWAP_BACK,          // Waiting to swap back to previous slot
+        UNEQUIP_ELYTRA      // Waiting to unequip elytra from chest slot to hotbar
     }
 
     private State state = State.IDLE;
@@ -57,7 +61,7 @@ public class ElytraSwap {
 
     /**
      * Called when the trigger key ("4") is pressed.
-     * Initiates the elytra equip sequence if conditions are met.
+     * If elytra is in hotbar, equip it. If elytra is worn, unequip it.
      */
     public void trigger(MinecraftClient client) {
         if (!enabled) return;
@@ -66,10 +70,25 @@ public class ElytraSwap {
         ClientPlayerEntity player = client.player;
         if (player == null || client.interactionManager == null) return;
 
-        int slot = MacroUtils.findHotbarSlot(player, Items.ELYTRA);
-        if (slot == -1) return; // No elytra in hotbar
-
         previousSlot = player.getInventory().getSelectedSlot();
+
+        // Check if elytra is already worn in chest armor slot
+        if (player.getEquippedStack(EquipmentSlot.CHEST).getItem() == Items.ELYTRA) {
+            // Elytra is worn — unequip it
+            // Find an empty hotbar slot or use current slot
+            elytraSlot = findEmptyHotbarSlot(player);
+            if (elytraSlot == -1) {
+                elytraSlot = previousSlot; // Use current slot if no empty slot
+            }
+            state = State.UNEQUIP_ELYTRA;
+            framesRemaining = randomDelay();
+            return;
+        }
+
+        // Check if elytra is in hotbar — equip it
+        int slot = MacroUtils.findHotbarSlot(player, Items.ELYTRA);
+        if (slot == -1) return; // No elytra anywhere relevant
+
         elytraSlot = slot;
         state = State.SWAP_TO_ELYTRA;
         framesRemaining = randomDelay();
@@ -116,8 +135,23 @@ public class ElytraSwap {
                 state = State.SWAP_BACK;
                 framesRemaining = randomDelay();
             }
+            case UNEQUIP_ELYTRA -> {
+                // Unequip: swap elytra from chest armor slot to hotbar
+                int hotbarScreenSlot = 36 + elytraSlot;
+                int syncId = player.currentScreenHandler.syncId;
+
+                // Pick up from chest armor slot (slot 6)
+                client.interactionManager.clickSlot(syncId, 6, 0, SlotActionType.PICKUP, player);
+                // Place in hotbar slot
+                client.interactionManager.clickSlot(syncId, hotbarScreenSlot, 0, SlotActionType.PICKUP, player);
+                // If there was an item in that hotbar slot, put it in chest slot
+                client.interactionManager.clickSlot(syncId, 6, 0, SlotActionType.PICKUP, player);
+
+                state = State.SWAP_BACK;
+                framesRemaining = randomDelay();
+            }
             case SWAP_BACK -> {
-                // Step 3: Swap back to previous hotbar slot
+                // Swap back to previous hotbar slot
                 player.getInventory().setSelectedSlot(previousSlot);
                 reset();
             }
@@ -125,6 +159,15 @@ public class ElytraSwap {
                 framesRemaining = -1;
             }
         }
+    }
+
+    private int findEmptyHotbarSlot(ClientPlayerEntity player) {
+        for (int i = 0; i < 9; i++) {
+            if (player.getInventory().getStack(i).isEmpty()) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     private int randomDelay() {

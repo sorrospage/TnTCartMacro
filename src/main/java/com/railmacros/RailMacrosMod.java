@@ -9,7 +9,7 @@ import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
 
-import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_5;
+import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_4;
 
 public class RailMacrosMod implements ClientModInitializer {
 
@@ -21,6 +21,7 @@ public class RailMacrosMod implements ClientModInitializer {
     public static final SafeAnchor SAFE_ANCHOR = new SafeAnchor();
     public static final ElytraSwap ELYTRA_SWAP = new ElytraSwap();
     public static final RocketUse ROCKET_USE = new RocketUse();
+    public static final CrystalAura CRYSTAL_AURA = new CrystalAura();
 
     private static KeyBinding railMacroToggle;
     private static KeyBinding bowMacroToggle;
@@ -65,11 +66,11 @@ public class RailMacrosMod implements ClientModInitializer {
                 KeyBinding.Category.MISC
         ));
 
-        // Register key binding for Mouse Button 5 (forward side button) for RocketUse
+        // Register key binding for Mouse Button 4 (back side button) for RocketUse
         rocketUseKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.railmacros.rocket_use",
                 InputUtil.Type.MOUSE,
-                GLFW_MOUSE_BUTTON_5,
+                GLFW_MOUSE_BUTTON_4,
                 KeyBinding.Category.MISC
         ));
 
@@ -134,7 +135,7 @@ public class RailMacrosMod implements ClientModInitializer {
         }
         elytraKeyWasPressed = elytraKeyDown;
 
-        // Handle RocketUse trigger: Mouse Button 5 — use registered KeyBinding for mouse buttons
+        // Handle RocketUse trigger: Mouse Button 4 — use registered KeyBinding for mouse buttons
         if (rocketUseKey.isPressed()) {
             if (!rocketKeyWasPressed) {
                 ROCKET_USE.trigger(client);
@@ -151,5 +152,6 @@ public class RailMacrosMod implements ClientModInitializer {
         AUTO_SPRINT.tick(client);
         SHIELD_BREAKER.tick(client);
         SAFE_ANCHOR.tick(client);
+        CRYSTAL_AURA.tick(client);
     }
 }
