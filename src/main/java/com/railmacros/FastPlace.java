@@ -66,13 +66,8 @@ public class FastPlace {
         ItemStack stack = client.player.getMainHandStack();
         if (stack.isEmpty()) return false;
         Item item = stack.getItem();
-        // Crossbow: skip only if unloaded (reloading). Allow fast-fire when loaded.
-        if (item == Items.CROSSBOW) {
-            net.minecraft.component.type.ChargedProjectilesComponent charged =
-                    stack.getComponents().get(net.minecraft.component.DataComponentTypes.CHARGED_PROJECTILES);
-            // Skip if unloaded (no projectiles or empty component)
-            return charged == null || charged.isEmpty();
-        }
+        // Always skip crossbows — doItemUse() bypasses the reload cycle and causes auto-fire
+        if (item == Items.CROSSBOW) return true;
         // Other chargeable items — always skip
         if (item == Items.BOW || item == Items.TRIDENT || item == Items.SHIELD) return true;
         // Experience bottle
