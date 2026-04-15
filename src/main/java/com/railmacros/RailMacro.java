@@ -22,6 +22,10 @@ public class RailMacro {
     // Track previous item counts for consumption detection
     private final Map<Item, Integer> previousCounts = new HashMap<>();
 
+    // Pending swap state (frame-based for precise timing)
+    private Item pendingSwapItem = null;
+    private int pendingSwapFramesRemaining = -1;
+
     private static final Item[] RAIL_ITEMS = {
             Items.RAIL,
             Items.POWERED_RAIL,
@@ -31,13 +35,13 @@ public class RailMacro {
 
     // ---- Configurable settings ----
 
-    // Rail -> TNT Minecart swap delay range (ms)
-    private int railToTntMinDelay = 4;
-    private int railToTntMaxDelay = 17;
+    // Rail -> TNT Minecart swap delay range (frames)
+    private int railToTntMinDelay = 0;
+    private int railToTntMaxDelay = 1;
 
-    // TNT Minecart -> Flint & Steel swap delay range (ms)
-    private int tntToFlintMinDelay = 4;
-    private int tntToFlintMaxDelay = 14;
+    // TNT Minecart -> Flint & Steel swap delay range (frames)
+    private int tntToFlintMinDelay = 0;
+    private int tntToFlintMaxDelay = 1;
 
     // Bow suppression: if a bow was shot within this many ms, skip rail->TNT swap
     private int bowSuppressionMs = 350;
@@ -48,13 +52,13 @@ public class RailMacro {
     public void setRailToTntMinDelay(int v) { railToTntMinDelay = Math.max(0, Math.min(v, railToTntMaxDelay)); }
 
     public int getRailToTntMaxDelay() { return railToTntMaxDelay; }
-    public void setRailToTntMaxDelay(int v) { railToTntMaxDelay = Math.max(railToTntMinDelay, Math.min(500, v)); }
+    public void setRailToTntMaxDelay(int v) { railToTntMaxDelay = Math.max(railToTntMinDelay, Math.min(10, v)); }
 
     public int getTntToFlintMinDelay() { return tntToFlintMinDelay; }
     public void setTntToFlintMinDelay(int v) { tntToFlintMinDelay = Math.max(0, Math.min(v, tntToFlintMaxDelay)); }
 
     public int getTntToFlintMaxDelay() { return tntToFlintMaxDelay; }
-    public void setTntToFlintMaxDelay(int v) { tntToFlintMaxDelay = Math.max(tntToFlintMinDelay, Math.min(500, v)); }
+    public void setTntToFlintMaxDelay(int v) { tntToFlintMaxDelay = Math.max(tntToFlintMinDelay, Math.min(10, v)); }
 
     public int getBowSuppressionMs() { return bowSuppressionMs; }
     public void setBowSuppressionMs(int v) { bowSuppressionMs = Math.max(0, Math.min(2000, v)); }
@@ -66,6 +70,8 @@ public class RailMacro {
     public void toggle() {
         enabled = !enabled;
         previousCounts.clear();
+        pendingSwapItem = null;
+        pendingSwapFramesRemaining = -1;
     }
 
     /**
@@ -81,6 +87,30 @@ public class RailMacro {
         previousCounts.put(Items.TNT_MINECART, MacroUtils.countInInventory(player, Items.TNT_MINECART));
     }
 
+    /**
+     * Called every render frame to process pending swaps with frame-level precision.
+     * At 60 FPS each frame is ~16ms, at 120 FPS each frame is ~8ms.
+     */
+    public void onFrame(MinecraftClient client) {
+        if (!enabled) return;
+        if (pendingSwapItem == null) return;
+
+        ClientPlayerEntity player = client.player;
+        if (player == null) return;
+
+        if (pendingSwapFramesRemaining <= 0) {
+            // Swap now
+            int slot = MacroUtils.findHotbarSlot(player, pendingSwapItem);
+            if (slot != -1) {
+                player.getInventory().setSelectedSlot(slot);
+            }
+            pendingSwapItem = null;
+            pendingSwapFramesRemaining = -1;
+        } else {
+            pendingSwapFramesRemaining--;
+        }
+    }
+
     public void tick(MinecraftClient client) {
         if (!enabled) return;
 
@@ -94,8 +124,8 @@ public class RailMacro {
             int currentCount = MacroUtils.countInInventory(player, railItem);
             Integer prevCount = previousCounts.get(railItem);
             if (prevCount != null && currentCount < prevCount && !bowSuppressed) {
-                // Rail was consumed -> swap to tnt_minecart
-                MacroUtils.scheduleSwap(Items.TNT_MINECART, railToTntMinDelay, railToTntMaxDelay);
+                // Rail was consumed -> queue swap to tnt_minecart (instant or tick-delayed)
+                queueSwap(Items.TNT_MINECART, railToTntMinDelay, railToTntMaxDelay);
             }
             previousCounts.put(railItem, currentCount);
         }
@@ -107,10 +137,21 @@ public class RailMacro {
             // TNT minecart was consumed
             // Check if bow macro suppression is active
             if (!RailMacrosMod.BOW_MACRO.isBowShotRecent()) {
-                // Swap to flint_and_steel
-                MacroUtils.scheduleSwap(Items.FLINT_AND_STEEL, tntToFlintMinDelay, tntToFlintMaxDelay);
+                // Queue swap to flint_and_steel
+                queueSwap(Items.FLINT_AND_STEEL, tntToFlintMinDelay, tntToFlintMaxDelay);
             }
         }
         previousCounts.put(Items.TNT_MINECART, tntMinecartCount);
+    }
+
+    /**
+     * Queue a swap to be executed on the next frame(s).
+     * Delay is in render frames — at higher FPS the swap happens sooner in real time.
+     * 0 frames = next frame, 1 frame = one frame later, etc.
+     */
+    private void queueSwap(Item item, int minDelayFrames, int maxDelayFrames) {
+        int delayFrames = java.util.concurrent.ThreadLocalRandom.current().nextInt(minDelayFrames, maxDelayFrames + 1);
+        pendingSwapItem = item;
+        pendingSwapFramesRemaining = delayFrames;
     }
 }

@@ -3,6 +3,7 @@ package com.railmacros;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import org.lwjgl.glfw.GLFW;
@@ -12,12 +13,12 @@ public class RailMacrosMod implements ClientModInitializer {
     public static final RailMacro RAIL_MACRO = new RailMacro();
     public static final BowMacro BOW_MACRO = new BowMacro();
     public static final TriggerBot TRIGGER_BOT = new TriggerBot();
-    public static final FastPlace FAST_PLACE = new FastPlace();
+    public static final AutoSprint AUTO_SPRINT = new AutoSprint();
+    public static final ShieldBreaker SHIELD_BREAKER = new ShieldBreaker();
 
     private static KeyBinding railMacroToggle;
     private static KeyBinding bowMacroToggle;
     private static KeyBinding triggerBotToggle;
-    private static KeyBinding fastPlaceToggle;
     private static KeyBinding menuToggle;
 
     // Track whether a screen was open last tick so we can reset counts on close
@@ -46,13 +47,6 @@ public class RailMacrosMod implements ClientModInitializer {
                 KeyBinding.Category.MISC
         ));
 
-        // Register key binding for "[" to toggle fast place
-        fastPlaceToggle = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.railmacros.toggle_fastplace",
-                GLFW.GLFW_KEY_LEFT_BRACKET,
-                KeyBinding.Category.MISC
-        ));
-
         // Register key binding for "Pause" to open module menu
         menuToggle = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.railmacros.menu",
@@ -62,6 +56,14 @@ public class RailMacrosMod implements ClientModInitializer {
 
         // Register tick event for inventory monitoring and key handling
         ClientTickEvents.END_CLIENT_TICK.register(this::onClientTick);
+
+        // Register per-frame callback for frame-based swap processing
+        HudRenderCallback.EVENT.register((drawContext, renderTickCounter) -> {
+            MinecraftClient mc = MinecraftClient.getInstance();
+            if (mc.player != null) {
+                RAIL_MACRO.onFrame(mc);
+            }
+        });
     }
 
     private void onClientTick(MinecraftClient client) {
@@ -78,10 +80,6 @@ public class RailMacrosMod implements ClientModInitializer {
 
         while (triggerBotToggle.wasPressed()) {
             TRIGGER_BOT.toggle();
-        }
-
-        while (fastPlaceToggle.wasPressed()) {
-            FAST_PLACE.toggle();
         }
 
         while (menuToggle.wasPressed()) {
@@ -110,6 +108,7 @@ public class RailMacrosMod implements ClientModInitializer {
         RAIL_MACRO.tick(client);
         BOW_MACRO.tick(client);
         TRIGGER_BOT.tick(client);
-        FAST_PLACE.tick(client);
+        AUTO_SPRINT.tick(client);
+        SHIELD_BREAKER.tick(client);
     }
 }

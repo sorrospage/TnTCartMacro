@@ -24,16 +24,18 @@ public class ModMenuScreen extends Screen {
     private boolean xbowExpanded = false;
     private boolean instaCartExpanded = false;
     private boolean triggerBotExpanded = false;
-    private boolean fastPlaceExpanded = false;
+    private boolean autoSprintExpanded = false;
+    private boolean shieldBreakerExpanded = false;
 
     // Track slider widgets per section so we can show/hide them
     private final List<ClickableWidget> xbowSliders = new ArrayList<>();
     private final List<ClickableWidget> instaCartSliders = new ArrayList<>();
     private final List<ClickableWidget> triggerBotSliders = new ArrayList<>();
-    private final List<ClickableWidget> fastPlaceSliders = new ArrayList<>();
+    private final List<ClickableWidget> autoSprintSliders = new ArrayList<>();
+    private final List<ClickableWidget> shieldBreakerSliders = new ArrayList<>();
 
     public ModMenuScreen() {
-        super(Text.literal("Modules"));
+        super(Text.literal("Rappture Client"));
     }
 
     @Override
@@ -42,7 +44,8 @@ public class ModMenuScreen extends Screen {
         xbowSliders.clear();
         instaCartSliders.clear();
         triggerBotSliders.clear();
-        fastPlaceSliders.clear();
+        autoSprintSliders.clear();
+        shieldBreakerSliders.clear();
 
         int centerX = this.width / 2 - BUTTON_WIDTH / 2;
         int halfWidth = (BUTTON_WIDTH - 4) / 2;
@@ -63,14 +66,14 @@ public class ModMenuScreen extends Screen {
         y += SPACING;
         if (xbowExpanded) {
             RailMacro rm = RailMacrosMod.RAIL_MACRO;
-            y = addSlider(xbowSliders, centerX, y, "Rail\u2192TNT Min", 0, 100, rm.getRailToTntMinDelay(),
-                    v -> rm.setRailToTntMinDelay((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
-            y = addSlider(xbowSliders, centerX, y, "Rail\u2192TNT Max", 0, 100, rm.getRailToTntMaxDelay(),
-                    v -> rm.setRailToTntMaxDelay((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
-            y = addSlider(xbowSliders, centerX, y, "TNT\u2192Flint Min", 0, 100, rm.getTntToFlintMinDelay(),
-                    v -> rm.setTntToFlintMinDelay((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
-            y = addSlider(xbowSliders, centerX, y, "TNT\u2192Flint Max", 0, 100, rm.getTntToFlintMaxDelay(),
-                    v -> rm.setTntToFlintMaxDelay((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
+            y = addSlider(xbowSliders, centerX, y, "Rail\u2192TNT Min", 0, 10, rm.getRailToTntMinDelay(),
+                    v -> rm.setRailToTntMinDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
+            y = addSlider(xbowSliders, centerX, y, "Rail\u2192TNT Max", 0, 10, rm.getRailToTntMaxDelay(),
+                    v -> rm.setRailToTntMaxDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
+            y = addSlider(xbowSliders, centerX, y, "TNT\u2192Flint Min", 0, 10, rm.getTntToFlintMinDelay(),
+                    v -> rm.setTntToFlintMinDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
+            y = addSlider(xbowSliders, centerX, y, "TNT\u2192Flint Max", 0, 10, rm.getTntToFlintMaxDelay(),
+                    v -> rm.setTntToFlintMaxDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
             y = addSlider(xbowSliders, centerX, y, "Bow Suppress", 0, 2000, rm.getBowSuppressionMs(),
                     v -> rm.setBowSuppressionMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
         }
@@ -131,36 +134,35 @@ public class ModMenuScreen extends Screen {
                     v -> tb.setSweepCooldownMax(v.floatValue()), v -> String.format("%.0f%%", v * 100));
         }
 
-        // ===== FastPlace =====
-        addDrawableChild(ButtonWidget.builder(getFastPlaceText(), button -> {
-            RailMacrosMod.FAST_PLACE.toggle();
-            button.setMessage(getFastPlaceText());
+        // ===== ShieldBreaker =====
+        addDrawableChild(ButtonWidget.builder(getShieldBreakerText(), button -> {
+            RailMacrosMod.SHIELD_BREAKER.toggle();
+            button.setMessage(getShieldBreakerText());
         }).dimensions(centerX, y, halfWidth, WIDGET_HEIGHT).build());
 
         addDrawableChild(ButtonWidget.builder(
-                Text.literal(fastPlaceExpanded ? "\u00a77\u25BC Settings" : "\u00a77\u25B6 Settings"),
-                button -> { fastPlaceExpanded = !fastPlaceExpanded; clearAndInit(); }
+                Text.literal(shieldBreakerExpanded ? "\u00a77\u25BC Settings" : "\u00a77\u25B6 Settings"),
+                button -> { shieldBreakerExpanded = !shieldBreakerExpanded; clearAndInit(); }
         ).dimensions(centerX + halfWidth + 4, y, halfWidth, WIDGET_HEIGHT).build());
 
         y += SPACING;
-        if (fastPlaceExpanded) {
-            FastPlace fp = RailMacrosMod.FAST_PLACE;
-            y = addSlider(fastPlaceSliders, centerX, y, "Min Delay", 0, 500, fp.getMinDelayMs(),
-                    v -> fp.setMinDelayMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
-            y = addSlider(fastPlaceSliders, centerX, y, "Max Delay", 0, 500, fp.getMaxDelayMs(),
-                    v -> fp.setMaxDelayMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
-            // Half-tick toggle button
-            ButtonWidget halfTickBtn = ButtonWidget.builder(
-                    Text.literal("Half Tick: " + (fp.isHalfTick() ? "\u00a7aON" : "\u00a7cOFF")),
-                    button -> {
-                        fp.setHalfTick(!fp.isHalfTick());
-                        button.setMessage(Text.literal("Half Tick: " + (fp.isHalfTick() ? "\u00a7aON" : "\u00a7cOFF")));
-                    }
-            ).dimensions(centerX, y, SLIDER_WIDTH, WIDGET_HEIGHT).build();
-            fastPlaceSliders.add(halfTickBtn);
-            addDrawableChild(halfTickBtn);
-            y += SPACING;
+        if (shieldBreakerExpanded) {
+            ShieldBreaker sb = RailMacrosMod.SHIELD_BREAKER;
+            y = addSlider(shieldBreakerSliders, centerX, y, "Miss Chance", 0.0, 0.50, sb.getMissChance(),
+                    sb::setMissChance, v -> String.format("%.0f%%", v * 100));
+            y = addSlider(shieldBreakerSliders, centerX, y, "Min Delay", 0, 500, sb.getMinDelayMs(),
+                    v -> sb.setMinDelayMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
+            y = addSlider(shieldBreakerSliders, centerX, y, "Max Delay", 0, 500, sb.getMaxDelayMs(),
+                    v -> sb.setMaxDelayMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
         }
+
+        // ===== AutoSprint =====
+        addDrawableChild(ButtonWidget.builder(getAutoSprintText(), button -> {
+            RailMacrosMod.AUTO_SPRINT.toggle();
+            button.setMessage(getAutoSprintText());
+        }).dimensions(centerX, y, BUTTON_WIDTH, WIDGET_HEIGHT).build());
+
+        y += SPACING;
     }
 
     private int addSlider(List<ClickableWidget> list, int x, int y, String label,
@@ -200,8 +202,13 @@ public class ModMenuScreen extends Screen {
         return Text.literal("TriggerBot: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
     }
 
-    private Text getFastPlaceText() {
-        boolean on = RailMacrosMod.FAST_PLACE.isEnabled();
-        return Text.literal("FastPlace: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
+    private Text getShieldBreakerText() {
+        boolean on = RailMacrosMod.SHIELD_BREAKER.isEnabled();
+        return Text.literal("ShieldBreaker: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
+    }
+
+    private Text getAutoSprintText() {
+        boolean on = RailMacrosMod.AUTO_SPRINT.isEnabled();
+        return Text.literal("AutoSprint: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
     }
 }
