@@ -24,14 +24,12 @@ public class ModMenuScreen extends Screen {
     private boolean xbowExpanded = false;
     private boolean instaCartExpanded = false;
     private boolean triggerBotExpanded = false;
-    private boolean fastPlaceExpanded = false;
     private boolean autoSprintExpanded = false;
 
     // Track slider widgets per section so we can show/hide them
     private final List<ClickableWidget> xbowSliders = new ArrayList<>();
     private final List<ClickableWidget> instaCartSliders = new ArrayList<>();
     private final List<ClickableWidget> triggerBotSliders = new ArrayList<>();
-    private final List<ClickableWidget> fastPlaceSliders = new ArrayList<>();
     private final List<ClickableWidget> autoSprintSliders = new ArrayList<>();
 
     public ModMenuScreen() {
@@ -44,7 +42,6 @@ public class ModMenuScreen extends Screen {
         xbowSliders.clear();
         instaCartSliders.clear();
         triggerBotSliders.clear();
-        fastPlaceSliders.clear();
         autoSprintSliders.clear();
 
         int centerX = this.width / 2 - BUTTON_WIDTH / 2;
@@ -134,36 +131,6 @@ public class ModMenuScreen extends Screen {
                     v -> tb.setSweepCooldownMax(v.floatValue()), v -> String.format("%.0f%%", v * 100));
         }
 
-        // ===== FastPlace =====
-        addDrawableChild(ButtonWidget.builder(getFastPlaceText(), button -> {
-            RailMacrosMod.FAST_PLACE.toggle();
-            button.setMessage(getFastPlaceText());
-        }).dimensions(centerX, y, halfWidth, WIDGET_HEIGHT).build());
-
-        addDrawableChild(ButtonWidget.builder(
-                Text.literal(fastPlaceExpanded ? "\u00a77\u25BC Settings" : "\u00a77\u25B6 Settings"),
-                button -> { fastPlaceExpanded = !fastPlaceExpanded; clearAndInit(); }
-        ).dimensions(centerX + halfWidth + 4, y, halfWidth, WIDGET_HEIGHT).build());
-
-        y += SPACING;
-        if (fastPlaceExpanded) {
-            FastPlace fp = RailMacrosMod.FAST_PLACE;
-            y = addSlider(fastPlaceSliders, centerX, y, "Min Delay", 0, 3, fp.getMinDelayTicks(),
-                    v -> fp.setMinDelayTicks((int) Math.round(v)), v -> String.format("%dt", (int) Math.round(v)));
-            y = addSlider(fastPlaceSliders, centerX, y, "Max Delay", 0, 3, fp.getMaxDelayTicks(),
-                    v -> fp.setMaxDelayTicks((int) Math.round(v)), v -> String.format("%dt", (int) Math.round(v)));
-            // Half-tick toggle button
-            ButtonWidget halfTickBtn = ButtonWidget.builder(
-                    Text.literal("Half Tick: " + (fp.isHalfTick() ? "\u00a7aON" : "\u00a7cOFF")),
-                    button -> {
-                        fp.setHalfTick(!fp.isHalfTick());
-                        button.setMessage(Text.literal("Half Tick: " + (fp.isHalfTick() ? "\u00a7aON" : "\u00a7cOFF")));
-                    }
-            ).dimensions(centerX, y, SLIDER_WIDTH, WIDGET_HEIGHT).build();
-            fastPlaceSliders.add(halfTickBtn);
-            addDrawableChild(halfTickBtn);
-            y += SPACING;
-        }
         // ===== AutoSprint =====
         addDrawableChild(ButtonWidget.builder(getAutoSprintText(), button -> {
             RailMacrosMod.AUTO_SPRINT.toggle();
@@ -208,11 +175,6 @@ public class ModMenuScreen extends Screen {
     private Text getTriggerBotText() {
         boolean on = RailMacrosMod.TRIGGER_BOT.isEnabled();
         return Text.literal("TriggerBot: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
-    }
-
-    private Text getFastPlaceText() {
-        boolean on = RailMacrosMod.FAST_PLACE.isEnabled();
-        return Text.literal("FastPlace: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
     }
 
     private Text getAutoSprintText() {

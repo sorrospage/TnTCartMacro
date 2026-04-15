@@ -13,13 +13,11 @@ public class RailMacrosMod implements ClientModInitializer {
     public static final RailMacro RAIL_MACRO = new RailMacro();
     public static final BowMacro BOW_MACRO = new BowMacro();
     public static final TriggerBot TRIGGER_BOT = new TriggerBot();
-    public static final FastPlace FAST_PLACE = new FastPlace();
     public static final AutoSprint AUTO_SPRINT = new AutoSprint();
 
     private static KeyBinding railMacroToggle;
     private static KeyBinding bowMacroToggle;
     private static KeyBinding triggerBotToggle;
-    private static KeyBinding fastPlaceToggle;
     private static KeyBinding menuToggle;
 
     // Track whether a screen was open last tick so we can reset counts on close
@@ -45,13 +43,6 @@ public class RailMacrosMod implements ClientModInitializer {
         triggerBotToggle = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.railmacros.toggle_triggerbot",
                 GLFW.GLFW_KEY_PAGE_DOWN,
-                KeyBinding.Category.MISC
-        ));
-
-        // Register key binding for "[" to toggle fast place
-        fastPlaceToggle = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.railmacros.toggle_fastplace",
-                GLFW.GLFW_KEY_LEFT_BRACKET,
                 KeyBinding.Category.MISC
         ));
 
@@ -90,10 +81,6 @@ public class RailMacrosMod implements ClientModInitializer {
             TRIGGER_BOT.toggle();
         }
 
-        while (fastPlaceToggle.wasPressed()) {
-            FAST_PLACE.toggle();
-        }
-
         while (menuToggle.wasPressed()) {
             if (client.currentScreen == null) {
                 client.setScreen(new ModMenuScreen());
@@ -120,7 +107,6 @@ public class RailMacrosMod implements ClientModInitializer {
         RAIL_MACRO.tick(client);
         BOW_MACRO.tick(client);
         TRIGGER_BOT.tick(client);
-        FAST_PLACE.tick(client);
         AUTO_SPRINT.tick(client);
     }
 }
