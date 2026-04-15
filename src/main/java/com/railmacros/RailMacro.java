@@ -22,6 +22,10 @@ public class RailMacro {
     // Track previous item counts for consumption detection
     private final Map<Item, Integer> previousCounts = new HashMap<>();
 
+    // Pending swap state (tick-based, avoids background thread hop)
+    private Item pendingSwapItem = null;
+    private int pendingSwapTicksRemaining = -1;
+
     private static final Item[] RAIL_ITEMS = {
             Items.RAIL,
             Items.POWERED_RAIL,
@@ -66,6 +70,8 @@ public class RailMacro {
     public void toggle() {
         enabled = !enabled;
         previousCounts.clear();
+        pendingSwapItem = null;
+        pendingSwapTicksRemaining = -1;
     }
 
     /**
@@ -87,6 +93,21 @@ public class RailMacro {
         ClientPlayerEntity player = client.player;
         if (player == null) return;
 
+        // Process any pending swap first (tick countdown)
+        if (pendingSwapItem != null) {
+            if (pendingSwapTicksRemaining <= 0) {
+                // Swap now — we're already on the client thread, no scheduling needed
+                int slot = MacroUtils.findHotbarSlot(player, pendingSwapItem);
+                if (slot != -1) {
+                    player.getInventory().setSelectedSlot(slot);
+                }
+                pendingSwapItem = null;
+                pendingSwapTicksRemaining = -1;
+            } else {
+                pendingSwapTicksRemaining--;
+            }
+        }
+
         // Check for rail consumption
         // Suppress rail->TNT swap if a bow was shot recently (within bowSuppressionMs)
         boolean bowSuppressed = RailMacrosMod.BOW_MACRO.isBowShotWithin(bowSuppressionMs);
@@ -94,8 +115,8 @@ public class RailMacro {
             int currentCount = MacroUtils.countInInventory(player, railItem);
             Integer prevCount = previousCounts.get(railItem);
             if (prevCount != null && currentCount < prevCount && !bowSuppressed) {
-                // Rail was consumed -> swap to tnt_minecart
-                MacroUtils.scheduleSwap(Items.TNT_MINECART, railToTntMinDelay, railToTntMaxDelay);
+                // Rail was consumed -> queue swap to tnt_minecart (instant or tick-delayed)
+                queueSwap(Items.TNT_MINECART, railToTntMinDelay, railToTntMaxDelay);
             }
             previousCounts.put(railItem, currentCount);
         }
@@ -107,10 +128,22 @@ public class RailMacro {
             // TNT minecart was consumed
             // Check if bow macro suppression is active
             if (!RailMacrosMod.BOW_MACRO.isBowShotRecent()) {
-                // Swap to flint_and_steel
-                MacroUtils.scheduleSwap(Items.FLINT_AND_STEEL, tntToFlintMinDelay, tntToFlintMaxDelay);
+                // Queue swap to flint_and_steel
+                queueSwap(Items.FLINT_AND_STEEL, tntToFlintMinDelay, tntToFlintMaxDelay);
             }
         }
         previousCounts.put(Items.TNT_MINECART, tntMinecartCount);
+    }
+
+    /**
+     * Queue a swap to be executed directly on the client thread via tick countdown.
+     * Converts ms delay to tick delay (1 tick = 50ms). 0ms = instant (same tick).
+     */
+    private void queueSwap(Item item, int minDelayMs, int maxDelayMs) {
+        int delayMs = java.util.concurrent.ThreadLocalRandom.current().nextInt(minDelayMs, maxDelayMs + 1);
+        // Convert ms to ticks, rounding down so short delays stay fast
+        int delayTicks = delayMs / 50;
+        pendingSwapItem = item;
+        pendingSwapTicksRemaining = delayTicks;
     }
 }

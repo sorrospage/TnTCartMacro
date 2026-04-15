@@ -97,15 +97,21 @@ public class FastPlace {
 
         if (holdingUse) {
             if (!wasHoldingUse) {
-                // Just started holding - initialize timing
+                // Just started holding - immediately reset cooldown and place
                 wasHoldingUse = true;
                 ticksSinceLastPlace = 0;
                 currentDelayTicks = randomDelay();
+                ((MinecraftClientAccessor) client).setItemUseCooldown(0);
+                ((MinecraftClientAccessor) client).invokeDoItemUse();
+                if (halfTick) {
+                    scheduleHalfTickPlace(client);
+                }
             } else {
                 ticksSinceLastPlace++;
                 if (ticksSinceLastPlace >= currentDelayTicks) {
-                    // Enough ticks have passed - allow the next right-click by resetting cooldown
+                    // Enough ticks have passed - reset cooldown and trigger placement
                     ((MinecraftClientAccessor) client).setItemUseCooldown(0);
+                    ((MinecraftClientAccessor) client).invokeDoItemUse();
                     ticksSinceLastPlace = 0;
                     currentDelayTicks = randomDelay();
 
