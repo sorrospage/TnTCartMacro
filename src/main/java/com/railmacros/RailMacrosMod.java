@@ -20,6 +20,7 @@ public class RailMacrosMod implements ClientModInitializer {
     public static final ShieldBreaker SHIELD_BREAKER = new ShieldBreaker();
     public static final CartGuard CART_GUARD = new CartGuard();
     public static final CrossbowSwap CROSSBOW_SWAP = new CrossbowSwap();
+    public static final HoverRefill HOVER_REFILL = new HoverRefill();
 
     private static KeyBinding railMacroToggle;
     private static KeyBinding bowMacroToggle;
