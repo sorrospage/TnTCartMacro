@@ -40,9 +40,6 @@ public class ModConfig {
         xbow.addProperty("tntToFlintMinDelay", rm.getTntToFlintMinDelay());
         xbow.addProperty("tntToFlintMaxDelay", rm.getTntToFlintMaxDelay());
         xbow.addProperty("bowSuppressionMs", rm.getBowSuppressionMs());
-        xbow.addProperty("crossbowSwapEnabled", rm.isCrossbowSwapEnabled());
-        xbow.addProperty("flintToXbowMinDelayMs", rm.getFlintToXbowMinDelayMs());
-        xbow.addProperty("flintToXbowMaxDelayMs", rm.getFlintToXbowMaxDelayMs());
         root.add("xbowMacro", xbow);
 
         // InstaCart (BowMacro)
@@ -88,6 +85,11 @@ public class ModConfig {
         cartGuard.addProperty("enabled", RailMacrosMod.CART_GUARD.isEnabled());
         root.add("cartGuard", cartGuard);
 
+        // CrossbowSwap
+        JsonObject xbowSwap = new JsonObject();
+        xbowSwap.addProperty("enabled", RailMacrosMod.CROSSBOW_SWAP.isEnabled());
+        root.add("crossbowSwap", xbowSwap);
+
         try {
             Files.writeString(getConfigPath(), GSON.toJson(root));
         } catch (IOException e) {
@@ -116,9 +118,6 @@ public class ModConfig {
                 if (xbow.has("tntToFlintMaxDelay")) rm.setTntToFlintMaxDelay(xbow.get("tntToFlintMaxDelay").getAsInt());
                 if (xbow.has("tntToFlintMinDelay")) rm.setTntToFlintMinDelay(xbow.get("tntToFlintMinDelay").getAsInt());
                 if (xbow.has("bowSuppressionMs")) rm.setBowSuppressionMs(xbow.get("bowSuppressionMs").getAsInt());
-                if (xbow.has("crossbowSwapEnabled")) rm.setCrossbowSwapEnabled(xbow.get("crossbowSwapEnabled").getAsBoolean());
-                if (xbow.has("flintToXbowMaxDelayMs")) rm.setFlintToXbowMaxDelayMs(xbow.get("flintToXbowMaxDelayMs").getAsInt());
-                if (xbow.has("flintToXbowMinDelayMs")) rm.setFlintToXbowMinDelayMs(xbow.get("flintToXbowMinDelayMs").getAsInt());
             }
 
             // InstaCart
@@ -170,6 +169,14 @@ public class ModConfig {
                 JsonObject cg = root.getAsJsonObject("cartGuard");
                 if (cg.has("enabled") && cg.get("enabled").getAsBoolean() != RailMacrosMod.CART_GUARD.isEnabled()) {
                     RailMacrosMod.CART_GUARD.toggle();
+                }
+            }
+
+            // CrossbowSwap
+            if (root.has("crossbowSwap")) {
+                JsonObject xs = root.getAsJsonObject("crossbowSwap");
+                if (xs.has("enabled") && xs.get("enabled").getAsBoolean() != RailMacrosMod.CROSSBOW_SWAP.isEnabled()) {
+                    RailMacrosMod.CROSSBOW_SWAP.toggle();
                 }
             }
 

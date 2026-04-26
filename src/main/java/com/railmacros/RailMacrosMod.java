@@ -6,7 +6,10 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
+
+import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_5;
 
 public class RailMacrosMod implements ClientModInitializer {
 
@@ -16,11 +19,16 @@ public class RailMacrosMod implements ClientModInitializer {
     public static final AutoSprint AUTO_SPRINT = new AutoSprint();
     public static final ShieldBreaker SHIELD_BREAKER = new ShieldBreaker();
     public static final CartGuard CART_GUARD = new CartGuard();
+    public static final CrossbowSwap CROSSBOW_SWAP = new CrossbowSwap();
 
     private static KeyBinding railMacroToggle;
     private static KeyBinding bowMacroToggle;
     private static KeyBinding triggerBotToggle;
     private static KeyBinding menuToggle;
+    private static KeyBinding crossbowSwapKey;
+
+    // Track key states for edge detection
+    private boolean crossbowSwapKeyWasPressed = false;
 
     // Track whether a screen was open last tick so we can reset counts on close
     private boolean wasScreenOpen = false;
@@ -52,6 +60,14 @@ public class RailMacrosMod implements ClientModInitializer {
         menuToggle = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.railmacros.menu",
                 GLFW.GLFW_KEY_PAUSE,
+                KeyBinding.Category.MISC
+        ));
+
+        // Register key binding for Mouse Button 5 for CrossbowSwap
+        crossbowSwapKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.railmacros.crossbow_swap",
+                InputUtil.Type.MOUSE,
+                GLFW_MOUSE_BUTTON_5,
                 KeyBinding.Category.MISC
         ));
 
@@ -109,6 +125,16 @@ public class RailMacrosMod implements ClientModInitializer {
             wasScreenOpen = false;
             RAIL_MACRO.resetCounts(client);
             BOW_MACRO.resetCounts(client);
+        }
+
+        // Handle CrossbowSwap trigger: Mouse Button 5 — edge-detect to trigger once per press
+        if (crossbowSwapKey.isPressed()) {
+            if (!crossbowSwapKeyWasPressed) {
+                CROSSBOW_SWAP.trigger(client);
+                crossbowSwapKeyWasPressed = true;
+            }
+        } else {
+            crossbowSwapKeyWasPressed = false;
         }
 
         // Tick all macros

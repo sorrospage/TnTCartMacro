@@ -78,23 +78,6 @@ public class ModMenuScreen extends Screen {
             y = addSlider(xbowSliders, centerX, y, "Bow Suppress", 0, 2000, rm.getBowSuppressionMs(),
                     v -> rm.setBowSuppressionMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
 
-            // Crossbow swap sub-toggle
-            addDrawableChild(ButtonWidget.builder(
-                    Text.literal("  Xbow Swap: " + (rm.isCrossbowSwapEnabled() ? "\u00a7aON" : "\u00a7cOFF")),
-                    button -> {
-                        rm.setCrossbowSwapEnabled(!rm.isCrossbowSwapEnabled());
-                        button.setMessage(Text.literal("  Xbow Swap: " + (rm.isCrossbowSwapEnabled() ? "\u00a7aON" : "\u00a7cOFF")));
-                        ModConfig.save();
-                    }
-            ).dimensions(centerX, y, BUTTON_WIDTH, WIDGET_HEIGHT).build());
-            y += SPACING;
-
-            if (rm.isCrossbowSwapEnabled()) {
-                y = addSlider(xbowSliders, centerX, y, "Flint\u2192Xbow Min", 0, 2000, rm.getFlintToXbowMinDelayMs(),
-                        v -> rm.setFlintToXbowMinDelayMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
-                y = addSlider(xbowSliders, centerX, y, "Flint\u2192Xbow Max", 0, 2000, rm.getFlintToXbowMaxDelayMs(),
-                        v -> rm.setFlintToXbowMaxDelayMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
-            }
         }
 
         // ===== InstaCart Macro =====
@@ -195,6 +178,15 @@ public class ModMenuScreen extends Screen {
         }).dimensions(centerX, y, BUTTON_WIDTH, WIDGET_HEIGHT).build());
 
         y += SPACING;
+
+        // ===== CrossbowSwap =====
+        addDrawableChild(ButtonWidget.builder(getCrossbowSwapText(), button -> {
+            RailMacrosMod.CROSSBOW_SWAP.toggle();
+            button.setMessage(getCrossbowSwapText());
+            ModConfig.save();
+        }).dimensions(centerX, y, BUTTON_WIDTH, WIDGET_HEIGHT).build());
+
+        y += SPACING;
     }
 
     private int addSlider(List<ClickableWidget> list, int x, int y, String label,
@@ -260,5 +252,10 @@ public class ModMenuScreen extends Screen {
     private Text getCartGuardText() {
         boolean on = RailMacrosMod.CART_GUARD.isEnabled();
         return Text.literal("CartGuard: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
+    }
+
+    private Text getCrossbowSwapText() {
+        boolean on = RailMacrosMod.CROSSBOW_SWAP.isEnabled();
+        return Text.literal("XbowSwap (MB5): " + (on ? "\u00a7aON" : "\u00a7cOFF"));
     }
 }

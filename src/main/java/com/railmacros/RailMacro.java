@@ -2,10 +2,7 @@ package com.railmacros;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.ChargedProjectilesComponent;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 
 import java.util.HashMap;
@@ -49,18 +46,6 @@ public class RailMacro {
     // Bow suppression: if a bow was shot within this many ms, skip rail->TNT swap
     private int bowSuppressionMs = 350;
 
-    // Crossbow swap: after flint & steel swap completes, wait ms then swap to loaded crossbow
-    private boolean crossbowSwapEnabled = false;
-    private int flintToXbowMinDelayMs = 0;
-    private int flintToXbowMaxDelayMs = 500;
-
-    // Track whether a crossbow swap should be queued after the flint swap completes
-    private boolean pendingCrossbowSwapAfterFlint = false;
-
-    // Ms-based crossbow swap timing: set when flint swap completes, checked in tick()
-    private long crossbowSwapTargetTimeMs = -1;
-    private int crossbowSwapTargetSlot = -1;
-
     // ---- Getters and setters ----
 
     public int getRailToTntMinDelay() { return railToTntMinDelay; }
@@ -78,15 +63,6 @@ public class RailMacro {
     public int getBowSuppressionMs() { return bowSuppressionMs; }
     public void setBowSuppressionMs(int v) { bowSuppressionMs = Math.max(0, Math.min(2000, v)); }
 
-    public boolean isCrossbowSwapEnabled() { return crossbowSwapEnabled; }
-    public void setCrossbowSwapEnabled(boolean v) { crossbowSwapEnabled = v; }
-
-    public int getFlintToXbowMinDelayMs() { return flintToXbowMinDelayMs; }
-    public void setFlintToXbowMinDelayMs(int v) { flintToXbowMinDelayMs = Math.max(0, Math.min(v, flintToXbowMaxDelayMs)); }
-
-    public int getFlintToXbowMaxDelayMs() { return flintToXbowMaxDelayMs; }
-    public void setFlintToXbowMaxDelayMs(int v) { flintToXbowMaxDelayMs = Math.max(flintToXbowMinDelayMs, Math.min(2000, v)); }
-
     public boolean isEnabled() {
         return enabled;
     }
@@ -96,10 +72,6 @@ public class RailMacro {
         previousCounts.clear();
         pendingSwapItem = null;
         pendingSwapFramesRemaining = -1;
-        pendingCrossbowSlot = -1;
-        pendingCrossbowSwapAfterFlint = false;
-        crossbowSwapTargetTimeMs = -1;
-        crossbowSwapTargetSlot = -1;
     }
 
     /**
@@ -127,28 +99,10 @@ public class RailMacro {
         if (player == null) return;
 
         if (pendingSwapFramesRemaining <= 0) {
-            // Swap now — use exact slot for crossbow, findHotbarSlot for everything else
-            if (pendingSwapItem == Items.CROSSBOW && pendingCrossbowSlot >= 0) {
-                player.getInventory().setSelectedSlot(pendingCrossbowSlot);
-                pendingCrossbowSlot = -1;
-            } else {
-                int slot = MacroUtils.findHotbarSlot(player, pendingSwapItem);
-                if (slot != -1) {
-                    player.getInventory().setSelectedSlot(slot);
-                }
-            }
-
-            // If this was the flint swap and crossbow swap is pending, schedule ms-based crossbow swap
-            if (pendingSwapItem == Items.FLINT_AND_STEEL && pendingCrossbowSwapAfterFlint) {
-                pendingCrossbowSwapAfterFlint = false;
-                int loadedSlot = findLoadedCrossbowSlot(player);
-                if (loadedSlot != -1) {
-                    int delayMs = flintToXbowMinDelayMs == flintToXbowMaxDelayMs
-                            ? flintToXbowMinDelayMs
-                            : java.util.concurrent.ThreadLocalRandom.current().nextInt(flintToXbowMinDelayMs, flintToXbowMaxDelayMs + 1);
-                    crossbowSwapTargetTimeMs = System.currentTimeMillis() + delayMs;
-                    crossbowSwapTargetSlot = loadedSlot;
-                }
+            // Swap now
+            int slot = MacroUtils.findHotbarSlot(player, pendingSwapItem);
+            if (slot != -1) {
+                player.getInventory().setSelectedSlot(slot);
             }
 
             pendingSwapItem = null;
@@ -186,22 +140,10 @@ public class RailMacro {
             if (!RailMacrosMod.BOW_MACRO.isBowShotRecent()) {
                 // Queue swap to flint_and_steel
                 queueSwap(Items.FLINT_AND_STEEL, tntToFlintMinDelay, tntToFlintMaxDelay);
-                // If crossbow swap is enabled, flag it to chain after flint swap completes
-                if (crossbowSwapEnabled) {
-                    pendingCrossbowSwapAfterFlint = true;
-                }
             }
         }
         previousCounts.put(Items.TNT_MINECART, tntMinecartCount);
 
-        // Check ms-based crossbow swap timer
-        if (crossbowSwapTargetTimeMs >= 0 && System.currentTimeMillis() >= crossbowSwapTargetTimeMs) {
-            if (crossbowSwapTargetSlot >= 0) {
-                player.getInventory().setSelectedSlot(crossbowSwapTargetSlot);
-            }
-            crossbowSwapTargetTimeMs = -1;
-            crossbowSwapTargetSlot = -1;
-        }
     }
 
     /**
@@ -209,29 +151,10 @@ public class RailMacro {
      * Delay is in render frames — at higher FPS the swap happens sooner in real time.
      * 0 frames = next frame, 1 frame = one frame later, etc.
      */
-    // Pending crossbow slot swap (by exact slot, not item type)
-    private int pendingCrossbowSlot = -1;
-
     private void queueSwap(Item item, int minDelayFrames, int maxDelayFrames) {
         int delayFrames = java.util.concurrent.ThreadLocalRandom.current().nextInt(minDelayFrames, maxDelayFrames + 1);
         pendingSwapItem = item;
         pendingSwapFramesRemaining = delayFrames;
     }
 
-    /**
-     * Find a loaded crossbow in the hotbar (one with charged projectiles).
-     * Returns the slot index, or -1 if not found.
-     */
-    private int findLoadedCrossbowSlot(ClientPlayerEntity player) {
-        for (int i = 0; i < 9; i++) {
-            ItemStack stack = player.getInventory().getStack(i);
-            if (stack.getItem() == Items.CROSSBOW) {
-                ChargedProjectilesComponent charged = stack.get(DataComponentTypes.CHARGED_PROJECTILES);
-                if (charged != null && !charged.isEmpty()) {
-                    return i;
-                }
-            }
-        }
-        return -1;
-    }
 }
