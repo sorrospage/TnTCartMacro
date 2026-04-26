@@ -3,7 +3,7 @@
     "package": "com.railmacros.mixin",
     "compatibilityLevel": "JAVA_21",
     "client": [
-        "HandledScreenMixin"
+        "HandledScreenAccessor"
     ],
     "injectors": {
         "defaultRequire": 1

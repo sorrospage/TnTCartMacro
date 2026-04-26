@@ -112,6 +112,9 @@ public class RailMacrosMod implements ClientModInitializer {
             }
         }
 
+        // HoverRefill needs to run while inventory screens are open
+        HOVER_REFILL.tick(client);
+
         // Pause macros while any screen (inventory, chest, etc.) is open
         // but not our own menu screen
         boolean isScreenOpen = client.currentScreen != null && !(client.currentScreen instanceof ModMenuScreen);
