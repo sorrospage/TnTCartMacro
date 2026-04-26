@@ -4,8 +4,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ChargedProjectilesComponent;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.vehicle.TntMinecartEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -51,6 +49,14 @@ public class RailMacro {
     // Bow suppression: if a bow was shot within this many ms, skip rail->TNT swap
     private int bowSuppressionMs = 350;
 
+    // Crossbow swap: after flint & steel is placed on a tnt_minecart, swap to loaded crossbow
+    private boolean crossbowSwapEnabled = false;
+    private int flintToXbowMinDelay = 0;
+    private int flintToXbowMaxDelay = 1;
+
+    // Track flint & steel durability for consumption detection
+    private int previousFlintDurability = -1;
+
     // ---- Getters and setters ----
 
     public int getRailToTntMinDelay() { return railToTntMinDelay; }
@@ -68,6 +74,15 @@ public class RailMacro {
     public int getBowSuppressionMs() { return bowSuppressionMs; }
     public void setBowSuppressionMs(int v) { bowSuppressionMs = Math.max(0, Math.min(2000, v)); }
 
+    public boolean isCrossbowSwapEnabled() { return crossbowSwapEnabled; }
+    public void setCrossbowSwapEnabled(boolean v) { crossbowSwapEnabled = v; }
+
+    public int getFlintToXbowMinDelay() { return flintToXbowMinDelay; }
+    public void setFlintToXbowMinDelay(int v) { flintToXbowMinDelay = Math.max(0, Math.min(v, flintToXbowMaxDelay)); }
+
+    public int getFlintToXbowMaxDelay() { return flintToXbowMaxDelay; }
+    public void setFlintToXbowMaxDelay(int v) { flintToXbowMaxDelay = Math.max(flintToXbowMinDelay, Math.min(10, v)); }
+
     public boolean isEnabled() {
         return enabled;
     }
@@ -78,6 +93,7 @@ public class RailMacro {
         pendingSwapItem = null;
         pendingSwapFramesRemaining = -1;
         pendingCrossbowSlot = -1;
+        previousFlintDurability = -1;
     }
 
     /**
@@ -154,17 +170,25 @@ public class RailMacro {
         }
         previousCounts.put(Items.TNT_MINECART, tntMinecartCount);
 
-        // Crossbow swap: if holding flint & steel and looking at a tnt_minecart entity, swap to loaded crossbow
-        if (player.getMainHandStack().getItem() == Items.FLINT_AND_STEEL) {
-            Entity target = client.targetedEntity;
-            if (target instanceof TntMinecartEntity && target.isAlive()) {
-                // Find a loaded crossbow in hotbar
-                int loadedCrossbowSlot = findLoadedCrossbowSlot(player);
-                if (loadedCrossbowSlot != -1 && pendingSwapItem == null) {
-                    pendingSwapItem = Items.CROSSBOW;
-                    pendingSwapFramesRemaining = 0; // instant swap
-                    pendingCrossbowSlot = loadedCrossbowSlot;
+        // Crossbow swap: after flint & steel is placed (durability consumed), swap to loaded crossbow
+        if (crossbowSwapEnabled) {
+            ItemStack mainHand = player.getMainHandStack();
+            if (mainHand.getItem() == Items.FLINT_AND_STEEL) {
+                int currentDurability = mainHand.getDamage();
+                if (previousFlintDurability >= 0 && currentDurability > previousFlintDurability) {
+                    // Flint & steel was used (durability increased = consumed)
+                    int loadedCrossbowSlot = findLoadedCrossbowSlot(player);
+                    if (loadedCrossbowSlot != -1 && pendingSwapItem == null) {
+                        pendingSwapItem = Items.CROSSBOW;
+                        pendingSwapFramesRemaining = flintToXbowMinDelay == flintToXbowMaxDelay
+                                ? flintToXbowMinDelay
+                                : java.util.concurrent.ThreadLocalRandom.current().nextInt(flintToXbowMinDelay, flintToXbowMaxDelay + 1);
+                        pendingCrossbowSlot = loadedCrossbowSlot;
+                    }
                 }
+                previousFlintDurability = currentDurability;
+            } else {
+                previousFlintDurability = -1;
             }
         }
     }
