@@ -75,60 +75,10 @@ public class ModConfig {
         shieldBreaker.addProperty("maxDelayMs", sb.getMaxDelayMs());
         root.add("shieldBreaker", shieldBreaker);
 
-        // SafeAnchor
-        JsonObject safeAnchor = new JsonObject();
-        SafeAnchor sa = RailMacrosMod.SAFE_ANCHOR;
-        safeAnchor.addProperty("enabled", sa.isEnabled());
-        safeAnchor.addProperty("minDelay", sa.getMinDelay());
-        safeAnchor.addProperty("maxDelay", sa.getMaxDelay());
-        root.add("safeAnchor", safeAnchor);
-
-        // ElytraSwap
-        JsonObject elytraSwap = new JsonObject();
-        ElytraSwap es = RailMacrosMod.ELYTRA_SWAP;
-        elytraSwap.addProperty("enabled", es.isEnabled());
-        elytraSwap.addProperty("minDelay", es.getMinDelay());
-        elytraSwap.addProperty("maxDelay", es.getMaxDelay());
-        root.add("elytraSwap", elytraSwap);
-
-        // RocketUse
-        JsonObject rocketUse = new JsonObject();
-        RocketUse ru = RailMacrosMod.ROCKET_USE;
-        rocketUse.addProperty("enabled", ru.isEnabled());
-        rocketUse.addProperty("minDelay", ru.getMinDelay());
-        rocketUse.addProperty("maxDelay", ru.getMaxDelay());
-        root.add("rocketUse", rocketUse);
-
-        // CrystalAura
-        JsonObject crystalAura = new JsonObject();
-        CrystalAura ca = RailMacrosMod.CRYSTAL_AURA;
-        crystalAura.addProperty("enabled", ca.isEnabled());
-        crystalAura.addProperty("placeMinDelay", ca.getPlaceMinDelay());
-        crystalAura.addProperty("placeMaxDelay", ca.getPlaceMaxDelay());
-        crystalAura.addProperty("breakMinDelay", ca.getBreakMinDelay());
-        crystalAura.addProperty("breakMaxDelay", ca.getBreakMaxDelay());
-        root.add("crystalAura", crystalAura);
-
         // AutoSprint
         JsonObject autoSprint = new JsonObject();
         autoSprint.addProperty("enabled", RailMacrosMod.AUTO_SPRINT.isEnabled());
         root.add("autoSprint", autoSprint);
-
-        // StunSlam
-        JsonObject stunSlam = new JsonObject();
-        StunSlam ss = RailMacrosMod.STUN_SLAM;
-        stunSlam.addProperty("enabled", ss.isEnabled());
-        stunSlam.addProperty("minDelayMs", ss.getMinDelayMs());
-        stunSlam.addProperty("maxDelayMs", ss.getMaxDelayMs());
-        root.add("stunSlam", stunSlam);
-
-        // AutoMace
-        JsonObject autoMace = new JsonObject();
-        AutoMace am = RailMacrosMod.AUTO_MACE;
-        autoMace.addProperty("enabled", am.isEnabled());
-        autoMace.addProperty("minDelayMs", am.getMinDelayMs());
-        autoMace.addProperty("maxDelayMs", am.getMaxDelayMs());
-        root.add("autoMace", autoMace);
 
         try {
             Files.writeString(getConfigPath(), GSON.toJson(root));
@@ -196,68 +146,12 @@ public class ModConfig {
                 if (sbo.has("minDelayMs")) sb.setMinDelayMs(sbo.get("minDelayMs").getAsInt());
             }
 
-            // SafeAnchor
-            if (root.has("safeAnchor")) {
-                JsonObject sao = root.getAsJsonObject("safeAnchor");
-                SafeAnchor sa = RailMacrosMod.SAFE_ANCHOR;
-                if (sao.has("enabled") && sao.get("enabled").getAsBoolean() != sa.isEnabled()) sa.toggle();
-                if (sao.has("maxDelay")) sa.setMaxDelay(sao.get("maxDelay").getAsInt());
-                if (sao.has("minDelay")) sa.setMinDelay(sao.get("minDelay").getAsInt());
-            }
-
-            // ElytraSwap
-            if (root.has("elytraSwap")) {
-                JsonObject eso = root.getAsJsonObject("elytraSwap");
-                ElytraSwap es = RailMacrosMod.ELYTRA_SWAP;
-                if (eso.has("enabled") && eso.get("enabled").getAsBoolean() != es.isEnabled()) es.toggle();
-                if (eso.has("maxDelay")) es.setMaxDelay(eso.get("maxDelay").getAsInt());
-                if (eso.has("minDelay")) es.setMinDelay(eso.get("minDelay").getAsInt());
-            }
-
-            // RocketUse
-            if (root.has("rocketUse")) {
-                JsonObject ruo = root.getAsJsonObject("rocketUse");
-                RocketUse ru = RailMacrosMod.ROCKET_USE;
-                if (ruo.has("enabled") && ruo.get("enabled").getAsBoolean() != ru.isEnabled()) ru.toggle();
-                if (ruo.has("maxDelay")) ru.setMaxDelay(ruo.get("maxDelay").getAsInt());
-                if (ruo.has("minDelay")) ru.setMinDelay(ruo.get("minDelay").getAsInt());
-            }
-
-            // CrystalAura
-            if (root.has("crystalAura")) {
-                JsonObject cao = root.getAsJsonObject("crystalAura");
-                CrystalAura ca = RailMacrosMod.CRYSTAL_AURA;
-                if (cao.has("enabled") && cao.get("enabled").getAsBoolean() != ca.isEnabled()) ca.toggle();
-                if (cao.has("placeMaxDelay")) ca.setPlaceMaxDelay(cao.get("placeMaxDelay").getAsInt());
-                if (cao.has("placeMinDelay")) ca.setPlaceMinDelay(cao.get("placeMinDelay").getAsInt());
-                if (cao.has("breakMaxDelay")) ca.setBreakMaxDelay(cao.get("breakMaxDelay").getAsInt());
-                if (cao.has("breakMinDelay")) ca.setBreakMinDelay(cao.get("breakMinDelay").getAsInt());
-            }
-
             // AutoSprint
             if (root.has("autoSprint")) {
                 JsonObject aso = root.getAsJsonObject("autoSprint");
                 if (aso.has("enabled") && aso.get("enabled").getAsBoolean() != RailMacrosMod.AUTO_SPRINT.isEnabled()) {
                     RailMacrosMod.AUTO_SPRINT.toggle();
                 }
-            }
-
-            // StunSlam
-            if (root.has("stunSlam")) {
-                JsonObject sso = root.getAsJsonObject("stunSlam");
-                StunSlam ss = RailMacrosMod.STUN_SLAM;
-                if (sso.has("enabled") && sso.get("enabled").getAsBoolean() != ss.isEnabled()) ss.toggle();
-                if (sso.has("maxDelayMs")) ss.setMaxDelayMs(sso.get("maxDelayMs").getAsInt());
-                if (sso.has("minDelayMs")) ss.setMinDelayMs(sso.get("minDelayMs").getAsInt());
-            }
-
-            // AutoMace
-            if (root.has("autoMace")) {
-                JsonObject amo = root.getAsJsonObject("autoMace");
-                AutoMace am = RailMacrosMod.AUTO_MACE;
-                if (amo.has("enabled") && amo.get("enabled").getAsBoolean() != am.isEnabled()) am.toggle();
-                if (amo.has("maxDelayMs")) am.setMaxDelayMs(amo.get("maxDelayMs").getAsInt());
-                if (amo.has("minDelayMs")) am.setMinDelayMs(amo.get("minDelayMs").getAsInt());
             }
 
         } catch (Exception e) {

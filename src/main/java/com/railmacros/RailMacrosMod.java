@@ -6,10 +6,7 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
-
-import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_4;
 
 public class RailMacrosMod implements ClientModInitializer {
 
@@ -18,22 +15,11 @@ public class RailMacrosMod implements ClientModInitializer {
     public static final TriggerBot TRIGGER_BOT = new TriggerBot();
     public static final AutoSprint AUTO_SPRINT = new AutoSprint();
     public static final ShieldBreaker SHIELD_BREAKER = new ShieldBreaker();
-    public static final SafeAnchor SAFE_ANCHOR = new SafeAnchor();
-    public static final ElytraSwap ELYTRA_SWAP = new ElytraSwap();
-    public static final RocketUse ROCKET_USE = new RocketUse();
-    public static final CrystalAura CRYSTAL_AURA = new CrystalAura();
-    public static final StunSlam STUN_SLAM = new StunSlam();
-    public static final AutoMace AUTO_MACE = new AutoMace();
 
     private static KeyBinding railMacroToggle;
     private static KeyBinding bowMacroToggle;
     private static KeyBinding triggerBotToggle;
     private static KeyBinding menuToggle;
-    private static KeyBinding rocketUseKey;
-
-    // Track key states for edge detection (trigger once per press)
-    private boolean elytraKeyWasPressed = false;
-    private boolean rocketKeyWasPressed = false;
 
     // Track whether a screen was open last tick so we can reset counts on close
     private boolean wasScreenOpen = false;
@@ -68,14 +54,6 @@ public class RailMacrosMod implements ClientModInitializer {
                 KeyBinding.Category.MISC
         ));
 
-        // Register key binding for Mouse Button 4 (back side button) for RocketUse
-        rocketUseKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.railmacros.rocket_use",
-                InputUtil.Type.MOUSE,
-                GLFW_MOUSE_BUTTON_4,
-                KeyBinding.Category.MISC
-        ));
-
         // Load saved config on startup
         ModConfig.load();
 
@@ -87,9 +65,6 @@ public class RailMacrosMod implements ClientModInitializer {
             MinecraftClient mc = MinecraftClient.getInstance();
             if (mc.player != null) {
                 RAIL_MACRO.onFrame(mc);
-                SAFE_ANCHOR.onFrame(mc);
-                ELYTRA_SWAP.onFrame(mc);
-                ROCKET_USE.onFrame(mc);
             }
         });
     }
@@ -130,24 +105,6 @@ public class RailMacrosMod implements ClientModInitializer {
             wasScreenOpen = false;
             RAIL_MACRO.resetCounts(client);
             BOW_MACRO.resetCounts(client);
-            SAFE_ANCHOR.resetCounts(client);
-        }
-
-        // Handle ElytraSwap trigger: key "4" — edge-detect to trigger once per press
-        boolean elytraKeyDown = InputUtil.isKeyPressed(client.getWindow(), GLFW.GLFW_KEY_4);
-        if (elytraKeyDown && !elytraKeyWasPressed) {
-            ELYTRA_SWAP.trigger(client);
-        }
-        elytraKeyWasPressed = elytraKeyDown;
-
-        // Handle RocketUse trigger: Mouse Button 4 — use registered KeyBinding for mouse buttons
-        if (rocketUseKey.isPressed()) {
-            if (!rocketKeyWasPressed) {
-                ROCKET_USE.trigger(client);
-                rocketKeyWasPressed = true;
-            }
-        } else {
-            rocketKeyWasPressed = false;
         }
 
         // Tick all macros
@@ -156,9 +113,5 @@ public class RailMacrosMod implements ClientModInitializer {
         TRIGGER_BOT.tick(client);
         AUTO_SPRINT.tick(client);
         SHIELD_BREAKER.tick(client);
-        SAFE_ANCHOR.tick(client);
-        CRYSTAL_AURA.tick(client);
-        STUN_SLAM.tick(client);
-        AUTO_MACE.tick(client);
     }
 }
