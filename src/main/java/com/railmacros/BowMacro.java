@@ -4,8 +4,10 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
+import net.minecraft.block.BlockState;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.BlockPos;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -131,23 +133,25 @@ public class BowMacro {
         if (wasUsingBow && !isCurrentlyUsingBow) {
             lastBowShotTimeMs = System.currentTimeMillis();
 
-            // Only swap to rail if looking at a block within 4 blocks
-            boolean blockInRange = false;
+            // Only swap to rail if looking at a block where a block can be placed
+            boolean canPlace = false;
             if (client.crosshairTarget != null
                     && client.crosshairTarget.getType() == HitResult.Type.BLOCK) {
                 BlockHitResult blockHit = (BlockHitResult) client.crosshairTarget;
-                double distSq = player.squaredDistanceTo(blockHit.getPos());
-                if (distSq <= 16.0) { // 4 blocks squared
-                    blockInRange = true;
+                // Check if the block adjacent to the hit face is air/replaceable (i.e., a block can be placed there)
+                BlockPos placePos = blockHit.getBlockPos().offset(blockHit.getSide());
+                BlockState stateAtPlace = client.world.getBlockState(placePos);
+                if (stateAtPlace.isReplaceable()) {
+                    canPlace = true;
                 }
             }
 
-            if (blockInRange) {
-                LOGGER.info("[BowMacro] Bow release detected, block in range, swapping to rail in {}ms", bowToRailDelay);
+            if (canPlace) {
+                LOGGER.info("[BowMacro] Bow release detected, placeable block target, swapping to rail in {}ms", bowToRailDelay);
                 // Bow fired -> swap to any rail type
                 MacroUtils.scheduleSwapFirstAvailable(RAIL_ITEMS, bowToRailDelay);
             } else {
-                LOGGER.info("[BowMacro] Bow release detected, but no block within 4 blocks — skipping swap");
+                LOGGER.info("[BowMacro] Bow release detected, but no placeable block target — skipping swap");
             }
         }
 
