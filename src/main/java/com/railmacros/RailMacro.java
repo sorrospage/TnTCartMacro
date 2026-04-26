@@ -2,7 +2,12 @@ package com.railmacros;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.ChargedProjectilesComponent;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.vehicle.TntMinecartEntity;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 
 import java.util.HashMap;
@@ -72,6 +77,7 @@ public class RailMacro {
         previousCounts.clear();
         pendingSwapItem = null;
         pendingSwapFramesRemaining = -1;
+        pendingCrossbowSlot = -1;
     }
 
     /**
@@ -99,10 +105,15 @@ public class RailMacro {
         if (player == null) return;
 
         if (pendingSwapFramesRemaining <= 0) {
-            // Swap now
-            int slot = MacroUtils.findHotbarSlot(player, pendingSwapItem);
-            if (slot != -1) {
-                player.getInventory().setSelectedSlot(slot);
+            // Swap now — use exact slot for crossbow, findHotbarSlot for everything else
+            if (pendingSwapItem == Items.CROSSBOW && pendingCrossbowSlot >= 0) {
+                player.getInventory().setSelectedSlot(pendingCrossbowSlot);
+                pendingCrossbowSlot = -1;
+            } else {
+                int slot = MacroUtils.findHotbarSlot(player, pendingSwapItem);
+                if (slot != -1) {
+                    player.getInventory().setSelectedSlot(slot);
+                }
             }
             pendingSwapItem = null;
             pendingSwapFramesRemaining = -1;
@@ -142,6 +153,20 @@ public class RailMacro {
             }
         }
         previousCounts.put(Items.TNT_MINECART, tntMinecartCount);
+
+        // Crossbow swap: if holding flint & steel and looking at a tnt_minecart entity, swap to loaded crossbow
+        if (player.getMainHandStack().getItem() == Items.FLINT_AND_STEEL) {
+            Entity target = client.targetedEntity;
+            if (target instanceof TntMinecartEntity && target.isAlive()) {
+                // Find a loaded crossbow in hotbar
+                int loadedCrossbowSlot = findLoadedCrossbowSlot(player);
+                if (loadedCrossbowSlot != -1 && pendingSwapItem == null) {
+                    pendingSwapItem = Items.CROSSBOW;
+                    pendingSwapFramesRemaining = 0; // instant swap
+                    pendingCrossbowSlot = loadedCrossbowSlot;
+                }
+            }
+        }
     }
 
     /**
@@ -149,10 +174,29 @@ public class RailMacro {
      * Delay is in render frames — at higher FPS the swap happens sooner in real time.
      * 0 frames = next frame, 1 frame = one frame later, etc.
      */
+    // Pending crossbow slot swap (by exact slot, not item type)
+    private int pendingCrossbowSlot = -1;
+
     private void queueSwap(Item item, int minDelayFrames, int maxDelayFrames) {
         int delayFrames = java.util.concurrent.ThreadLocalRandom.current().nextInt(minDelayFrames, maxDelayFrames + 1);
         pendingSwapItem = item;
         pendingSwapFramesRemaining = delayFrames;
     }
 
+    /**
+     * Find a loaded crossbow in the hotbar (one with charged projectiles).
+     * Returns the slot index, or -1 if not found.
+     */
+    private int findLoadedCrossbowSlot(ClientPlayerEntity player) {
+        for (int i = 0; i < 9; i++) {
+            ItemStack stack = player.getInventory().getStack(i);
+            if (stack.getItem() == Items.CROSSBOW) {
+                ChargedProjectilesComponent charged = stack.get(DataComponentTypes.CHARGED_PROJECTILES);
+                if (charged != null && !charged.isEmpty()) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
 }
