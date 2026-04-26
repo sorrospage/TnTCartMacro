@@ -80,6 +80,16 @@ public class ModConfig {
         autoSprint.addProperty("enabled", RailMacrosMod.AUTO_SPRINT.isEnabled());
         root.add("autoSprint", autoSprint);
 
+        // CartGuard
+        JsonObject cartGuard = new JsonObject();
+        cartGuard.addProperty("enabled", RailMacrosMod.CART_GUARD.isEnabled());
+        root.add("cartGuard", cartGuard);
+
+        // CrossbowSwap
+        JsonObject xbowSwap = new JsonObject();
+        xbowSwap.addProperty("enabled", RailMacrosMod.CROSSBOW_SWAP.isEnabled());
+        root.add("crossbowSwap", xbowSwap);
+
         try {
             Files.writeString(getConfigPath(), GSON.toJson(root));
         } catch (IOException e) {
@@ -151,6 +161,22 @@ public class ModConfig {
                 JsonObject aso = root.getAsJsonObject("autoSprint");
                 if (aso.has("enabled") && aso.get("enabled").getAsBoolean() != RailMacrosMod.AUTO_SPRINT.isEnabled()) {
                     RailMacrosMod.AUTO_SPRINT.toggle();
+                }
+            }
+
+            // CartGuard
+            if (root.has("cartGuard")) {
+                JsonObject cg = root.getAsJsonObject("cartGuard");
+                if (cg.has("enabled") && cg.get("enabled").getAsBoolean() != RailMacrosMod.CART_GUARD.isEnabled()) {
+                    RailMacrosMod.CART_GUARD.toggle();
+                }
+            }
+
+            // CrossbowSwap
+            if (root.has("crossbowSwap")) {
+                JsonObject xs = root.getAsJsonObject("crossbowSwap");
+                if (xs.has("enabled") && xs.get("enabled").getAsBoolean() != RailMacrosMod.CROSSBOW_SWAP.isEnabled()) {
+                    RailMacrosMod.CROSSBOW_SWAP.toggle();
                 }
             }
 

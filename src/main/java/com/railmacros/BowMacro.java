@@ -2,6 +2,8 @@ package com.railmacros;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.util.hit.BlockHitResult;
@@ -131,23 +133,32 @@ public class BowMacro {
         if (wasUsingBow && !isCurrentlyUsingBow) {
             lastBowShotTimeMs = System.currentTimeMillis();
 
-            // Only swap to rail if looking at a block within 4 blocks
-            boolean blockInRange = false;
+            // If looking at a placed rail block, skip rail swap and go straight to tnt_minecart
+            boolean lookingAtRail = false;
             if (client.crosshairTarget != null
                     && client.crosshairTarget.getType() == HitResult.Type.BLOCK) {
                 BlockHitResult blockHit = (BlockHitResult) client.crosshairTarget;
-                double distSq = player.squaredDistanceTo(blockHit.getPos());
-                if (distSq <= 16.0) { // 4 blocks squared
-                    blockInRange = true;
+                Block block = client.world.getBlockState(blockHit.getBlockPos()).getBlock();
+                if (block == Blocks.RAIL || block == Blocks.POWERED_RAIL
+                        || block == Blocks.DETECTOR_RAIL || block == Blocks.ACTIVATOR_RAIL) {
+                    lookingAtRail = true;
                 }
             }
 
-            if (blockInRange) {
-                LOGGER.info("[BowMacro] Bow release detected, block in range, swapping to rail in {}ms", bowToRailDelay);
+            if (lookingAtRail) {
+                LOGGER.info("[BowMacro] Bow release detected, looking at rail — skipping rail swap, going straight to TNT minecart in {}ms", bowToRailDelay);
+                // Skip rail, swap straight to tnt_minecart
+                boolean tntInHotbar = MacroUtils.findHotbarSlot(player, Items.TNT_MINECART) != -1;
+                boolean tntInOffhand = player.getOffHandStack().getItem() == Items.TNT_MINECART;
+                if (tntInHotbar) {
+                    MacroUtils.scheduleSwap(Items.TNT_MINECART, bowToRailDelay);
+                } else if (tntInOffhand) {
+                    MacroUtils.scheduleSwapFirstAvailable(SWORD_ITEMS, bowToRailDelay);
+                }
+            } else {
+                LOGGER.info("[BowMacro] Bow release detected, swapping to rail in {}ms", bowToRailDelay);
                 // Bow fired -> swap to any rail type
                 MacroUtils.scheduleSwapFirstAvailable(RAIL_ITEMS, bowToRailDelay);
-            } else {
-                LOGGER.info("[BowMacro] Bow release detected, but no block within 4 blocks — skipping swap");
             }
         }
 

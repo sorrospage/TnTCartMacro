@@ -77,6 +77,7 @@ public class ModMenuScreen extends Screen {
                     v -> rm.setTntToFlintMaxDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
             y = addSlider(xbowSliders, centerX, y, "Bow Suppress", 0, 2000, rm.getBowSuppressionMs(),
                     v -> rm.setBowSuppressionMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
+
         }
 
         // ===== InstaCart Macro =====
@@ -168,6 +169,24 @@ public class ModMenuScreen extends Screen {
         }).dimensions(centerX, y, BUTTON_WIDTH, WIDGET_HEIGHT).build());
 
         y += SPACING;
+
+        // ===== CartGuard =====
+        addDrawableChild(ButtonWidget.builder(getCartGuardText(), button -> {
+            RailMacrosMod.CART_GUARD.toggle();
+            button.setMessage(getCartGuardText());
+            ModConfig.save();
+        }).dimensions(centerX, y, BUTTON_WIDTH, WIDGET_HEIGHT).build());
+
+        y += SPACING;
+
+        // ===== CrossbowSwap =====
+        addDrawableChild(ButtonWidget.builder(getCrossbowSwapText(), button -> {
+            RailMacrosMod.CROSSBOW_SWAP.toggle();
+            button.setMessage(getCrossbowSwapText());
+            ModConfig.save();
+        }).dimensions(centerX, y, BUTTON_WIDTH, WIDGET_HEIGHT).build());
+
+        y += SPACING;
     }
 
     private int addSlider(List<ClickableWidget> list, int x, int y, String label,
@@ -228,5 +247,15 @@ public class ModMenuScreen extends Screen {
     private Text getAutoSprintText() {
         boolean on = RailMacrosMod.AUTO_SPRINT.isEnabled();
         return Text.literal("AutoSprint: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
+    }
+
+    private Text getCartGuardText() {
+        boolean on = RailMacrosMod.CART_GUARD.isEnabled();
+        return Text.literal("CartGuard: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
+    }
+
+    private Text getCrossbowSwapText() {
+        boolean on = RailMacrosMod.CROSSBOW_SWAP.isEnabled();
+        return Text.literal("XbowSwap (MB5): " + (on ? "\u00a7aON" : "\u00a7cOFF"));
     }
 }
