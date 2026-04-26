@@ -83,6 +83,11 @@ public class ModConfig {
         autoSprint.addProperty("enabled", RailMacrosMod.AUTO_SPRINT.isEnabled());
         root.add("autoSprint", autoSprint);
 
+        // CartGuard
+        JsonObject cartGuard = new JsonObject();
+        cartGuard.addProperty("enabled", RailMacrosMod.CART_GUARD.isEnabled());
+        root.add("cartGuard", cartGuard);
+
         try {
             Files.writeString(getConfigPath(), GSON.toJson(root));
         } catch (IOException e) {
@@ -157,6 +162,14 @@ public class ModConfig {
                 JsonObject aso = root.getAsJsonObject("autoSprint");
                 if (aso.has("enabled") && aso.get("enabled").getAsBoolean() != RailMacrosMod.AUTO_SPRINT.isEnabled()) {
                     RailMacrosMod.AUTO_SPRINT.toggle();
+                }
+            }
+
+            // CartGuard
+            if (root.has("cartGuard")) {
+                JsonObject cg = root.getAsJsonObject("cartGuard");
+                if (cg.has("enabled") && cg.get("enabled").getAsBoolean() != RailMacrosMod.CART_GUARD.isEnabled()) {
+                    RailMacrosMod.CART_GUARD.toggle();
                 }
             }
 

@@ -186,6 +186,15 @@ public class ModMenuScreen extends Screen {
         }).dimensions(centerX, y, BUTTON_WIDTH, WIDGET_HEIGHT).build());
 
         y += SPACING;
+
+        // ===== CartGuard =====
+        addDrawableChild(ButtonWidget.builder(getCartGuardText(), button -> {
+            RailMacrosMod.CART_GUARD.toggle();
+            button.setMessage(getCartGuardText());
+            ModConfig.save();
+        }).dimensions(centerX, y, BUTTON_WIDTH, WIDGET_HEIGHT).build());
+
+        y += SPACING;
     }
 
     private int addSlider(List<ClickableWidget> list, int x, int y, String label,
@@ -246,5 +255,10 @@ public class ModMenuScreen extends Screen {
     private Text getAutoSprintText() {
         boolean on = RailMacrosMod.AUTO_SPRINT.isEnabled();
         return Text.literal("AutoSprint: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
+    }
+
+    private Text getCartGuardText() {
+        boolean on = RailMacrosMod.CART_GUARD.isEnabled();
+        return Text.literal("CartGuard: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
     }
 }

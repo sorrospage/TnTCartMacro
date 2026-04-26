@@ -15,6 +15,7 @@ public class RailMacrosMod implements ClientModInitializer {
     public static final TriggerBot TRIGGER_BOT = new TriggerBot();
     public static final AutoSprint AUTO_SPRINT = new AutoSprint();
     public static final ShieldBreaker SHIELD_BREAKER = new ShieldBreaker();
+    public static final CartGuard CART_GUARD = new CartGuard();
 
     private static KeyBinding railMacroToggle;
     private static KeyBinding bowMacroToggle;
@@ -53,6 +54,9 @@ public class RailMacrosMod implements ClientModInitializer {
                 GLFW.GLFW_KEY_PAUSE,
                 KeyBinding.Category.MISC
         ));
+
+        // Register CartGuard event listener
+        CART_GUARD.register();
 
         // Load saved config on startup
         ModConfig.load();
