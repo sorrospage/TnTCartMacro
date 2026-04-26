@@ -41,8 +41,10 @@ public class CartGuard {
         UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
             if (!enabled) return ActionResult.PASS;
 
-            // Only care about TNT minecart in the used hand
-            if (player.getStackInHand(hand).getItem() != Items.TNT_MINECART) {
+            // Check if either hand holds a TNT minecart
+            boolean mainHandHasTnt = player.getMainHandStack().getItem() == Items.TNT_MINECART;
+            boolean offHandHasTnt = player.getOffHandStack().getItem() == Items.TNT_MINECART;
+            if (!mainHandHasTnt && !offHandHasTnt) {
                 return ActionResult.PASS;
             }
 
