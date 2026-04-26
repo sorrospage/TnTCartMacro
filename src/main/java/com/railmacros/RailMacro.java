@@ -49,13 +49,17 @@ public class RailMacro {
     // Bow suppression: if a bow was shot within this many ms, skip rail->TNT swap
     private int bowSuppressionMs = 350;
 
-    // Crossbow swap: after flint & steel swap completes, swap to loaded crossbow
+    // Crossbow swap: after flint & steel swap completes, wait ms then swap to loaded crossbow
     private boolean crossbowSwapEnabled = false;
-    private int flintToXbowMinDelay = 0;
-    private int flintToXbowMaxDelay = 1;
+    private int flintToXbowMinDelayMs = 0;
+    private int flintToXbowMaxDelayMs = 500;
 
     // Track whether a crossbow swap should be queued after the flint swap completes
     private boolean pendingCrossbowSwapAfterFlint = false;
+
+    // Ms-based crossbow swap timing: set when flint swap completes, checked in tick()
+    private long crossbowSwapTargetTimeMs = -1;
+    private int crossbowSwapTargetSlot = -1;
 
     // ---- Getters and setters ----
 
@@ -77,11 +81,11 @@ public class RailMacro {
     public boolean isCrossbowSwapEnabled() { return crossbowSwapEnabled; }
     public void setCrossbowSwapEnabled(boolean v) { crossbowSwapEnabled = v; }
 
-    public int getFlintToXbowMinDelay() { return flintToXbowMinDelay; }
-    public void setFlintToXbowMinDelay(int v) { flintToXbowMinDelay = Math.max(0, Math.min(v, flintToXbowMaxDelay)); }
+    public int getFlintToXbowMinDelayMs() { return flintToXbowMinDelayMs; }
+    public void setFlintToXbowMinDelayMs(int v) { flintToXbowMinDelayMs = Math.max(0, Math.min(v, flintToXbowMaxDelayMs)); }
 
-    public int getFlintToXbowMaxDelay() { return flintToXbowMaxDelay; }
-    public void setFlintToXbowMaxDelay(int v) { flintToXbowMaxDelay = Math.max(flintToXbowMinDelay, Math.min(10, v)); }
+    public int getFlintToXbowMaxDelayMs() { return flintToXbowMaxDelayMs; }
+    public void setFlintToXbowMaxDelayMs(int v) { flintToXbowMaxDelayMs = Math.max(flintToXbowMinDelayMs, Math.min(2000, v)); }
 
     public boolean isEnabled() {
         return enabled;
@@ -94,6 +98,8 @@ public class RailMacro {
         pendingSwapFramesRemaining = -1;
         pendingCrossbowSlot = -1;
         pendingCrossbowSwapAfterFlint = false;
+        crossbowSwapTargetTimeMs = -1;
+        crossbowSwapTargetSlot = -1;
     }
 
     /**
@@ -132,17 +138,16 @@ public class RailMacro {
                 }
             }
 
-            // If this was the flint swap and crossbow swap is pending, queue it now
+            // If this was the flint swap and crossbow swap is pending, schedule ms-based crossbow swap
             if (pendingSwapItem == Items.FLINT_AND_STEEL && pendingCrossbowSwapAfterFlint) {
                 pendingCrossbowSwapAfterFlint = false;
                 int loadedSlot = findLoadedCrossbowSlot(player);
                 if (loadedSlot != -1) {
-                    pendingSwapItem = Items.CROSSBOW;
-                    pendingSwapFramesRemaining = flintToXbowMinDelay == flintToXbowMaxDelay
-                            ? flintToXbowMinDelay
-                            : java.util.concurrent.ThreadLocalRandom.current().nextInt(flintToXbowMinDelay, flintToXbowMaxDelay + 1);
-                    pendingCrossbowSlot = loadedSlot;
-                    return; // Don't null out pendingSwapItem — we just set a new one
+                    int delayMs = flintToXbowMinDelayMs == flintToXbowMaxDelayMs
+                            ? flintToXbowMinDelayMs
+                            : java.util.concurrent.ThreadLocalRandom.current().nextInt(flintToXbowMinDelayMs, flintToXbowMaxDelayMs + 1);
+                    crossbowSwapTargetTimeMs = System.currentTimeMillis() + delayMs;
+                    crossbowSwapTargetSlot = loadedSlot;
                 }
             }
 
@@ -189,6 +194,14 @@ public class RailMacro {
         }
         previousCounts.put(Items.TNT_MINECART, tntMinecartCount);
 
+        // Check ms-based crossbow swap timer
+        if (crossbowSwapTargetTimeMs >= 0 && System.currentTimeMillis() >= crossbowSwapTargetTimeMs) {
+            if (crossbowSwapTargetSlot >= 0) {
+                player.getInventory().setSelectedSlot(crossbowSwapTargetSlot);
+            }
+            crossbowSwapTargetTimeMs = -1;
+            crossbowSwapTargetSlot = -1;
+        }
     }
 
     /**

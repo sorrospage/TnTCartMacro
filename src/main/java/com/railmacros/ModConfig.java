@@ -41,8 +41,8 @@ public class ModConfig {
         xbow.addProperty("tntToFlintMaxDelay", rm.getTntToFlintMaxDelay());
         xbow.addProperty("bowSuppressionMs", rm.getBowSuppressionMs());
         xbow.addProperty("crossbowSwapEnabled", rm.isCrossbowSwapEnabled());
-        xbow.addProperty("flintToXbowMinDelay", rm.getFlintToXbowMinDelay());
-        xbow.addProperty("flintToXbowMaxDelay", rm.getFlintToXbowMaxDelay());
+        xbow.addProperty("flintToXbowMinDelayMs", rm.getFlintToXbowMinDelayMs());
+        xbow.addProperty("flintToXbowMaxDelayMs", rm.getFlintToXbowMaxDelayMs());
         root.add("xbowMacro", xbow);
 
         // InstaCart (BowMacro)
@@ -112,8 +112,8 @@ public class ModConfig {
                 if (xbow.has("tntToFlintMinDelay")) rm.setTntToFlintMinDelay(xbow.get("tntToFlintMinDelay").getAsInt());
                 if (xbow.has("bowSuppressionMs")) rm.setBowSuppressionMs(xbow.get("bowSuppressionMs").getAsInt());
                 if (xbow.has("crossbowSwapEnabled")) rm.setCrossbowSwapEnabled(xbow.get("crossbowSwapEnabled").getAsBoolean());
-                if (xbow.has("flintToXbowMaxDelay")) rm.setFlintToXbowMaxDelay(xbow.get("flintToXbowMaxDelay").getAsInt());
-                if (xbow.has("flintToXbowMinDelay")) rm.setFlintToXbowMinDelay(xbow.get("flintToXbowMinDelay").getAsInt());
+                if (xbow.has("flintToXbowMaxDelayMs")) rm.setFlintToXbowMaxDelayMs(xbow.get("flintToXbowMaxDelayMs").getAsInt());
+                if (xbow.has("flintToXbowMinDelayMs")) rm.setFlintToXbowMinDelayMs(xbow.get("flintToXbowMinDelayMs").getAsInt());
             }
 
             // InstaCart

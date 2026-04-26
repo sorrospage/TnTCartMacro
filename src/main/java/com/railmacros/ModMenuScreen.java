@@ -90,10 +90,10 @@ public class ModMenuScreen extends Screen {
             y += SPACING;
 
             if (rm.isCrossbowSwapEnabled()) {
-                y = addSlider(xbowSliders, centerX, y, "Flint\u2192Xbow Min", 0, 10, rm.getFlintToXbowMinDelay(),
-                        v -> rm.setFlintToXbowMinDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
-                y = addSlider(xbowSliders, centerX, y, "Flint\u2192Xbow Max", 0, 10, rm.getFlintToXbowMaxDelay(),
-                        v -> rm.setFlintToXbowMaxDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
+                y = addSlider(xbowSliders, centerX, y, "Flint\u2192Xbow Min", 0, 2000, rm.getFlintToXbowMinDelayMs(),
+                        v -> rm.setFlintToXbowMinDelayMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
+                y = addSlider(xbowSliders, centerX, y, "Flint\u2192Xbow Max", 0, 2000, rm.getFlintToXbowMaxDelayMs(),
+                        v -> rm.setFlintToXbowMaxDelayMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
             }
         }
 
