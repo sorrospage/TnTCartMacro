@@ -20,17 +20,19 @@ public class ModMenuScreen extends Screen {
     private static final int WIDGET_HEIGHT = 20;
     private static final int SPACING = 24;
 
+    // Track which dropdown sections are expanded
     private boolean xbowExpanded = false;
     private boolean instaCartExpanded = false;
     private boolean triggerBotExpanded = false;
-    private boolean shieldBreakerExpanded = false;
     private boolean autoSprintExpanded = false;
+    private boolean shieldBreakerExpanded = false;
 
+    // Track slider widgets per section so we can show/hide them
     private final List<ClickableWidget> xbowSliders = new ArrayList<>();
     private final List<ClickableWidget> instaCartSliders = new ArrayList<>();
     private final List<ClickableWidget> triggerBotSliders = new ArrayList<>();
-    private final List<ClickableWidget> shieldBreakerSliders = new ArrayList<>();
     private final List<ClickableWidget> autoSprintSliders = new ArrayList<>();
+    private final List<ClickableWidget> shieldBreakerSliders = new ArrayList<>();
 
     public ModMenuScreen() {
         super(Text.literal("Rappture Client"));
@@ -42,14 +44,15 @@ public class ModMenuScreen extends Screen {
         xbowSliders.clear();
         instaCartSliders.clear();
         triggerBotSliders.clear();
-        shieldBreakerSliders.clear();
         autoSprintSliders.clear();
+        shieldBreakerSliders.clear();
 
         int centerX = this.width / 2 - BUTTON_WIDTH / 2;
         int halfWidth = (BUTTON_WIDTH - 4) / 2;
         int y = 30;
 
         // ===== Xbow Macro =====
+        // Toggle + dropdown button on the same row
         addDrawableChild(ButtonWidget.builder(getXbowText(), button -> {
             RailMacrosMod.RAIL_MACRO.toggle();
             button.setMessage(getXbowText());
@@ -74,6 +77,7 @@ public class ModMenuScreen extends Screen {
                     v -> rm.setTntToFlintMaxDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
             y = addSlider(xbowSliders, centerX, y, "Bow Suppress", 0, 2000, rm.getBowSuppressionMs(),
                     v -> rm.setBowSuppressionMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
+
         }
 
         // ===== InstaCart Macro =====
@@ -183,6 +187,7 @@ public class ModMenuScreen extends Screen {
         }).dimensions(centerX, y, BUTTON_WIDTH, WIDGET_HEIGHT).build());
 
         y += SPACING;
+
     }
 
     private int addSlider(List<ClickableWidget> list, int x, int y, String label,
@@ -203,12 +208,14 @@ public class ModMenuScreen extends Screen {
         int titleWidth = this.textRenderer.getWidth(this.title);
         int titleX = this.width / 2 - titleWidth / 2;
         int titleY = 10;
+        // Draw dark background behind title for visibility
         context.fill(titleX - 4, titleY - 2, titleX + titleWidth + 4, titleY + 12, 0xAA000000);
         context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, titleY, 0xFFFFFF);
     }
 
     @Override
     public void close() {
+        // Save config whenever the menu is closed
         ModConfig.save();
         super.close();
     }
@@ -216,11 +223,6 @@ public class ModMenuScreen extends Screen {
     @Override
     public boolean shouldCloseOnEsc() {
         return true;
-    }
-
-    @Override
-    public boolean shouldPause() {
-        return false;
     }
 
     private Text getXbowText() {
@@ -256,5 +258,10 @@ public class ModMenuScreen extends Screen {
     private Text getCrossbowSwapText() {
         boolean on = RailMacrosMod.CROSSBOW_SWAP.isEnabled();
         return Text.literal("XbowSwap (MB5): " + (on ? "\u00a7aON" : "\u00a7cOFF"));
+    }
+
+    @Override
+    public boolean shouldPause() {
+        return false;
     }
 }
