@@ -128,23 +128,9 @@ public class RailMacrosMod implements ClientModInitializer {
             BOW_MACRO.resetCounts(client);
         }
 
-        // Handle CrossbowSwap trigger: Mouse Button 5 — use raw GLFW input so it
-        // overrides / ignores any other keybinds on MB5 when a loaded crossbow is in hotbar
-        long window = client.getWindow().getHandle();
-        boolean mb5Down = GLFW.glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_5) == GLFW_PRESS;
-        if (mb5Down) {
-            if (!crossbowSwapKeyWasPressed) {
-                if (CROSSBOW_SWAP.isEnabled() && client.player != null
-                        && CROSSBOW_SWAP.hasLoadedCrossbow(client.player)) {
-                    CROSSBOW_SWAP.trigger(client);
-                    // Consume the keybind press so other bindings on MB5 don't fire
-                    while (crossbowSwapKey.wasPressed()) { /* drain */ }
-                }
-                crossbowSwapKeyWasPressed = true;
-            }
-        } else {
-            crossbowSwapKeyWasPressed = false;
-        }
+        // CrossbowSwap is handled by MouseMixin which intercepts MB5 at the source.
+        // Drain any leftover keybind presses here so the registered binding doesn't conflict.
+        while (crossbowSwapKey.wasPressed()) { /* drained by mixin */ }
 
         // Tick all macros
         RAIL_MACRO.tick(client);
