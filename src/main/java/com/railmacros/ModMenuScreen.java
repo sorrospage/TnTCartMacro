@@ -1,38 +1,23 @@
 package com.railmacros;
 
+import imgui.type.ImBoolean;
+import imgui.ImGui;
+import imgui.flag.ImGuiCond;
+import imgui.flag.ImGuiWindowFlags;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Module menu opened with the Pause key.
- * Each module has a toggle button and a collapsible dropdown with settings sliders.
+ * Uses Dear ImGui for a floating window with collapsible sections per module.
  */
 public class ModMenuScreen extends Screen {
 
-    private static final int BUTTON_WIDTH = 200;
-    private static final int SLIDER_WIDTH = 200;
-    private static final int WIDGET_HEIGHT = 20;
-    private static final int SPACING = 24;
-
-    // Track which dropdown sections are expanded
-    private boolean xbowExpanded = false;
-    private boolean instaCartExpanded = false;
-    private boolean triggerBotExpanded = false;
-    private boolean autoSprintExpanded = false;
-    private boolean shieldBreakerExpanded = false;
-
-    // Track slider widgets per section so we can show/hide them
-    private final List<ClickableWidget> xbowSliders = new ArrayList<>();
-    private final List<ClickableWidget> instaCartSliders = new ArrayList<>();
-    private final List<ClickableWidget> triggerBotSliders = new ArrayList<>();
-    private final List<ClickableWidget> autoSprintSliders = new ArrayList<>();
-    private final List<ClickableWidget> shieldBreakerSliders = new ArrayList<>();
+    // Temporary arrays for ImGui widget state (reused each frame)
+    private final int[] tmpInt = new int[1];
+    private final float[] tmpFloat = new float[1];
+    private final ImBoolean tmpBool = new ImBoolean();
 
     public ModMenuScreen() {
         super(Text.literal("Rappture Client"));
@@ -41,184 +26,221 @@ public class ModMenuScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        xbowSliders.clear();
-        instaCartSliders.clear();
-        triggerBotSliders.clear();
-        autoSprintSliders.clear();
-        shieldBreakerSliders.clear();
-
-        int centerX = this.width / 2 - BUTTON_WIDTH / 2;
-        int halfWidth = (BUTTON_WIDTH - 4) / 2;
-        int y = 30;
-
-        // ===== Xbow Macro =====
-        // Toggle + dropdown button on the same row
-        addDrawableChild(ButtonWidget.builder(getXbowText(), button -> {
-            RailMacrosMod.RAIL_MACRO.toggle();
-            button.setMessage(getXbowText());
-            ModConfig.save();
-        }).dimensions(centerX, y, halfWidth, WIDGET_HEIGHT).build());
-
-        addDrawableChild(ButtonWidget.builder(
-                Text.literal(xbowExpanded ? "\u00a77\u25BC Settings" : "\u00a77\u25B6 Settings"),
-                button -> { xbowExpanded = !xbowExpanded; clearAndInit(); }
-        ).dimensions(centerX + halfWidth + 4, y, halfWidth, WIDGET_HEIGHT).build());
-
-        y += SPACING;
-        if (xbowExpanded) {
-            RailMacro rm = RailMacrosMod.RAIL_MACRO;
-            y = addSlider(xbowSliders, centerX, y, "Rail\u2192TNT Min", 0, 10, rm.getRailToTntMinDelay(),
-                    v -> rm.setRailToTntMinDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
-            y = addSlider(xbowSliders, centerX, y, "Rail\u2192TNT Max", 0, 10, rm.getRailToTntMaxDelay(),
-                    v -> rm.setRailToTntMaxDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
-            y = addSlider(xbowSliders, centerX, y, "TNT\u2192Flint Min", 0, 10, rm.getTntToFlintMinDelay(),
-                    v -> rm.setTntToFlintMinDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
-            y = addSlider(xbowSliders, centerX, y, "TNT\u2192Flint Max", 0, 10, rm.getTntToFlintMaxDelay(),
-                    v -> rm.setTntToFlintMaxDelay((int) Math.round(v)), v -> String.format("%df", (int) Math.round(v)));
-            y = addSlider(xbowSliders, centerX, y, "Bow Suppress", 0, 2000, rm.getBowSuppressionMs(),
-                    v -> rm.setBowSuppressionMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
-
-        }
-
-        // ===== InstaCart Macro =====
-        addDrawableChild(ButtonWidget.builder(getInstaCartText(), button -> {
-            RailMacrosMod.BOW_MACRO.toggle();
-            button.setMessage(getInstaCartText());
-            ModConfig.save();
-        }).dimensions(centerX, y, halfWidth, WIDGET_HEIGHT).build());
-
-        addDrawableChild(ButtonWidget.builder(
-                Text.literal(instaCartExpanded ? "\u00a77\u25BC Settings" : "\u00a77\u25B6 Settings"),
-                button -> { instaCartExpanded = !instaCartExpanded; clearAndInit(); }
-        ).dimensions(centerX + halfWidth + 4, y, halfWidth, WIDGET_HEIGHT).build());
-
-        y += SPACING;
-        if (instaCartExpanded) {
-            BowMacro bm = RailMacrosMod.BOW_MACRO;
-            y = addSlider(instaCartSliders, centerX, y, "Bow\u2192Rail Delay", 0, 500, bm.getBowToRailDelay(),
-                    v -> bm.setBowToRailDelay((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
-            y = addSlider(instaCartSliders, centerX, y, "Rail\u2192TNT Delay", 0, 500, bm.getRailToTntDelay(),
-                    v -> bm.setRailToTntDelay((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
-            y = addSlider(instaCartSliders, centerX, y, "Suppress Window", 0, 2000, bm.getSuppressionWindowMs(),
-                    v -> bm.setSuppressionWindowMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
-        }
-
-        // ===== TriggerBot =====
-        addDrawableChild(ButtonWidget.builder(getTriggerBotText(), button -> {
-            RailMacrosMod.TRIGGER_BOT.toggle();
-            button.setMessage(getTriggerBotText());
-            ModConfig.save();
-        }).dimensions(centerX, y, halfWidth, WIDGET_HEIGHT).build());
-
-        addDrawableChild(ButtonWidget.builder(
-                Text.literal(triggerBotExpanded ? "\u00a77\u25BC Settings" : "\u00a77\u25B6 Settings"),
-                button -> { triggerBotExpanded = !triggerBotExpanded; clearAndInit(); }
-        ).dimensions(centerX + halfWidth + 4, y, halfWidth, WIDGET_HEIGHT).build());
-
-        y += SPACING;
-        if (triggerBotExpanded) {
-            TriggerBot tb = RailMacrosMod.TRIGGER_BOT;
-            y = addSlider(triggerBotSliders, centerX, y, "Miss Chance", 0.0, 0.50, tb.getMissChance(),
-                    tb::setMissChance, v -> String.format("%.0f%%", v * 100));
-            y = addSlider(triggerBotSliders, centerX, y, "Min Delay", 0, 500, tb.getMinReactionDelayMs(),
-                    v -> tb.setMinReactionDelayMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
-            y = addSlider(triggerBotSliders, centerX, y, "Max Delay", 0, 500, tb.getMaxReactionDelayMs(),
-                    v -> tb.setMaxReactionDelayMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
-            y = addSlider(triggerBotSliders, centerX, y, "Sprint CD Min", 0.50, 1.50, tb.getSprintCooldownMin(),
-                    v -> tb.setSprintCooldownMin(v.floatValue()), v -> String.format("%.0f%%", v * 100));
-            y = addSlider(triggerBotSliders, centerX, y, "Sprint CD Max", 0.50, 1.50, tb.getSprintCooldownMax(),
-                    v -> tb.setSprintCooldownMax(v.floatValue()), v -> String.format("%.0f%%", v * 100));
-            y = addSlider(triggerBotSliders, centerX, y, "Crit CD Min", 0.50, 1.50, tb.getCritCooldownMin(),
-                    v -> tb.setCritCooldownMin(v.floatValue()), v -> String.format("%.0f%%", v * 100));
-            y = addSlider(triggerBotSliders, centerX, y, "Crit CD Max", 0.50, 1.50, tb.getCritCooldownMax(),
-                    v -> tb.setCritCooldownMax(v.floatValue()), v -> String.format("%.0f%%", v * 100));
-            y = addSlider(triggerBotSliders, centerX, y, "Sweep CD Min", 0.50, 1.50, tb.getSweepCooldownMin(),
-                    v -> tb.setSweepCooldownMin(v.floatValue()), v -> String.format("%.0f%%", v * 100));
-            y = addSlider(triggerBotSliders, centerX, y, "Sweep CD Max", 0.50, 1.50, tb.getSweepCooldownMax(),
-                    v -> tb.setSweepCooldownMax(v.floatValue()), v -> String.format("%.0f%%", v * 100));
-        }
-
-        // ===== ShieldBreaker =====
-        addDrawableChild(ButtonWidget.builder(getShieldBreakerText(), button -> {
-            RailMacrosMod.SHIELD_BREAKER.toggle();
-            button.setMessage(getShieldBreakerText());
-            ModConfig.save();
-        }).dimensions(centerX, y, halfWidth, WIDGET_HEIGHT).build());
-
-        addDrawableChild(ButtonWidget.builder(
-                Text.literal(shieldBreakerExpanded ? "\u00a77\u25BC Settings" : "\u00a77\u25B6 Settings"),
-                button -> { shieldBreakerExpanded = !shieldBreakerExpanded; clearAndInit(); }
-        ).dimensions(centerX + halfWidth + 4, y, halfWidth, WIDGET_HEIGHT).build());
-
-        y += SPACING;
-        if (shieldBreakerExpanded) {
-            ShieldBreaker sb = RailMacrosMod.SHIELD_BREAKER;
-            y = addSlider(shieldBreakerSliders, centerX, y, "Miss Chance", 0.0, 0.50, sb.getMissChance(),
-                    sb::setMissChance, v -> String.format("%.0f%%", v * 100));
-            y = addSlider(shieldBreakerSliders, centerX, y, "Min Delay", 0, 500, sb.getMinDelayMs(),
-                    v -> sb.setMinDelayMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
-            y = addSlider(shieldBreakerSliders, centerX, y, "Max Delay", 0, 500, sb.getMaxDelayMs(),
-                    v -> sb.setMaxDelayMs((int) Math.round(v)), v -> String.format("%dms", (int) Math.round(v)));
-        }
-
-        // ===== AutoSprint =====
-        addDrawableChild(ButtonWidget.builder(getAutoSprintText(), button -> {
-            RailMacrosMod.AUTO_SPRINT.toggle();
-            button.setMessage(getAutoSprintText());
-            ModConfig.save();
-        }).dimensions(centerX, y, BUTTON_WIDTH, WIDGET_HEIGHT).build());
-
-        y += SPACING;
-
-        // ===== CartGuard =====
-        addDrawableChild(ButtonWidget.builder(getCartGuardText(), button -> {
-            RailMacrosMod.CART_GUARD.toggle();
-            button.setMessage(getCartGuardText());
-            ModConfig.save();
-        }).dimensions(centerX, y, BUTTON_WIDTH, WIDGET_HEIGHT).build());
-
-        y += SPACING;
-
-        // ===== CrossbowSwap =====
-        addDrawableChild(ButtonWidget.builder(getCrossbowSwapText(), button -> {
-            RailMacrosMod.CROSSBOW_SWAP.toggle();
-            button.setMessage(getCrossbowSwapText());
-            ModConfig.save();
-        }).dimensions(centerX, y, BUTTON_WIDTH, WIDGET_HEIGHT).build());
-
-        y += SPACING;
-
-        // ===== HoverRefill =====
-        addDrawableChild(ButtonWidget.builder(getHoverRefillText(), button -> {
-            RailMacrosMod.HOVER_REFILL.toggle();
-            button.setMessage(getHoverRefillText());
-            ModConfig.save();
-        }).dimensions(centerX, y, BUTTON_WIDTH, WIDGET_HEIGHT).build());
-
-        y += SPACING;
-    }
-
-    private int addSlider(List<ClickableWidget> list, int x, int y, String label,
-                          double min, double max, double current,
-                          java.util.function.Consumer<Double> onChange,
-                          java.util.function.Function<Double, String> formatter) {
-        ConfigSliderWidget slider = new ConfigSliderWidget(x, y, SLIDER_WIDTH, WIDGET_HEIGHT,
-                label, min, max, current, onChange, formatter);
-        list.add(slider);
-        addDrawableChild(slider);
-        return y + SPACING;
+        // Initialize ImGui on first menu open
+        ImGuiManager.init();
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
-        // Draw "Rappture Client" title prominently at top
-        int titleWidth = this.textRenderer.getWidth(this.title);
-        int titleX = this.width / 2 - titleWidth / 2;
-        int titleY = 10;
-        // Draw dark background behind title for visibility
-        context.fill(titleX - 4, titleY - 2, titleX + titleWidth + 4, titleY + 12, 0xAA000000);
-        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, titleY, 0xFFFFFF);
+        // Draw semi-transparent background
+        context.fill(0, 0, this.width, this.height, 0x66000000);
+
+        // Render ImGui overlay
+        if (ImGuiManager.isInitialized()) {
+            ImGuiManager.startFrame();
+            renderImGuiMenu();
+            ImGuiManager.endFrame();
+        }
+    }
+
+    private void renderImGuiMenu() {
+        // Center the window on first appearance
+        ImGui.setNextWindowPos(
+                ImGui.getMainViewport().getSizeX() / 2.0f - 175,
+                ImGui.getMainViewport().getSizeY() / 2.0f - 250,
+                ImGuiCond.FirstUseEver
+        );
+        ImGui.setNextWindowSize(350, 500, ImGuiCond.FirstUseEver);
+
+        int windowFlags = ImGuiWindowFlags.NoCollapse;
+        if (ImGui.begin("Rappture Client", windowFlags)) {
+
+            // ===== Xbow Macro =====
+            if (ImGui.collapsingHeader("Xbow Macro")) {
+                RailMacro rm = RailMacrosMod.RAIL_MACRO;
+
+                tmpBool.set(rm.isEnabled());
+                if (ImGui.checkbox("Enabled##xbow", tmpBool)) {
+                    rm.toggle();
+                    ModConfig.save();
+                }
+
+                tmpInt[0] = rm.getRailToTntMinDelay();
+                if (ImGui.sliderInt("Rail\u2192TNT Min##xbow", tmpInt, 0, 10, "%df")) {
+                    rm.setRailToTntMinDelay(tmpInt[0]);
+                }
+
+                tmpInt[0] = rm.getRailToTntMaxDelay();
+                if (ImGui.sliderInt("Rail\u2192TNT Max##xbow", tmpInt, 0, 10, "%df")) {
+                    rm.setRailToTntMaxDelay(tmpInt[0]);
+                }
+
+                tmpInt[0] = rm.getTntToFlintMinDelay();
+                if (ImGui.sliderInt("TNT\u2192Flint Min##xbow", tmpInt, 0, 10, "%df")) {
+                    rm.setTntToFlintMinDelay(tmpInt[0]);
+                }
+
+                tmpInt[0] = rm.getTntToFlintMaxDelay();
+                if (ImGui.sliderInt("TNT\u2192Flint Max##xbow", tmpInt, 0, 10, "%df")) {
+                    rm.setTntToFlintMaxDelay(tmpInt[0]);
+                }
+
+                tmpInt[0] = rm.getBowSuppressionMs();
+                if (ImGui.sliderInt("Bow Suppress##xbow", tmpInt, 0, 2000, "%dms")) {
+                    rm.setBowSuppressionMs(tmpInt[0]);
+                }
+
+                ImGui.separator();
+            }
+
+            // ===== InstaCart Macro =====
+            if (ImGui.collapsingHeader("InstaCart")) {
+                BowMacro bm = RailMacrosMod.BOW_MACRO;
+
+                tmpBool.set(bm.isEnabled());
+                if (ImGui.checkbox("Enabled##instacart", tmpBool)) {
+                    bm.toggle();
+                    ModConfig.save();
+                }
+
+                tmpInt[0] = bm.getBowToRailDelay();
+                if (ImGui.sliderInt("Bow\u2192Rail Delay##ic", tmpInt, 0, 500, "%dms")) {
+                    bm.setBowToRailDelay(tmpInt[0]);
+                }
+
+                tmpInt[0] = bm.getRailToTntDelay();
+                if (ImGui.sliderInt("Rail\u2192TNT Delay##ic", tmpInt, 0, 500, "%dms")) {
+                    bm.setRailToTntDelay(tmpInt[0]);
+                }
+
+                tmpInt[0] = bm.getSuppressionWindowMs();
+                if (ImGui.sliderInt("Suppress Window##ic", tmpInt, 0, 2000, "%dms")) {
+                    bm.setSuppressionWindowMs(tmpInt[0]);
+                }
+
+                ImGui.separator();
+            }
+
+            // ===== TriggerBot =====
+            if (ImGui.collapsingHeader("TriggerBot")) {
+                TriggerBot tb = RailMacrosMod.TRIGGER_BOT;
+
+                tmpBool.set(tb.isEnabled());
+                if (ImGui.checkbox("Enabled##triggerbot", tmpBool)) {
+                    tb.toggle();
+                    ModConfig.save();
+                }
+
+                tmpFloat[0] = (float)(tb.getMissChance() * 100.0);
+                if (ImGui.sliderFloat("Miss Chance##tb", tmpFloat, 0, 50, "%.0f%%")) {
+                    tb.setMissChance(tmpFloat[0] / 100.0);
+                }
+
+                tmpInt[0] = tb.getMinReactionDelayMs();
+                if (ImGui.sliderInt("Min Delay##tb", tmpInt, 0, 500, "%dms")) {
+                    tb.setMinReactionDelayMs(tmpInt[0]);
+                }
+
+                tmpInt[0] = tb.getMaxReactionDelayMs();
+                if (ImGui.sliderInt("Max Delay##tb", tmpInt, 0, 500, "%dms")) {
+                    tb.setMaxReactionDelayMs(tmpInt[0]);
+                }
+
+                tmpFloat[0] = (float)(tb.getSprintCooldownMin() * 100.0);
+                if (ImGui.sliderFloat("Sprint CD Min##tb", tmpFloat, 50, 150, "%.0f%%")) {
+                    tb.setSprintCooldownMin(tmpFloat[0] / 100.0f);
+                }
+
+                tmpFloat[0] = (float)(tb.getSprintCooldownMax() * 100.0);
+                if (ImGui.sliderFloat("Sprint CD Max##tb", tmpFloat, 50, 150, "%.0f%%")) {
+                    tb.setSprintCooldownMax(tmpFloat[0] / 100.0f);
+                }
+
+                tmpFloat[0] = (float)(tb.getCritCooldownMin() * 100.0);
+                if (ImGui.sliderFloat("Crit CD Min##tb", tmpFloat, 50, 150, "%.0f%%")) {
+                    tb.setCritCooldownMin(tmpFloat[0] / 100.0f);
+                }
+
+                tmpFloat[0] = (float)(tb.getCritCooldownMax() * 100.0);
+                if (ImGui.sliderFloat("Crit CD Max##tb", tmpFloat, 50, 150, "%.0f%%")) {
+                    tb.setCritCooldownMax(tmpFloat[0] / 100.0f);
+                }
+
+                tmpFloat[0] = (float)(tb.getSweepCooldownMin() * 100.0);
+                if (ImGui.sliderFloat("Sweep CD Min##tb", tmpFloat, 50, 150, "%.0f%%")) {
+                    tb.setSweepCooldownMin(tmpFloat[0] / 100.0f);
+                }
+
+                tmpFloat[0] = (float)(tb.getSweepCooldownMax() * 100.0);
+                if (ImGui.sliderFloat("Sweep CD Max##tb", tmpFloat, 50, 150, "%.0f%%")) {
+                    tb.setSweepCooldownMax(tmpFloat[0] / 100.0f);
+                }
+
+                ImGui.separator();
+            }
+
+            // ===== ShieldBreaker =====
+            if (ImGui.collapsingHeader("ShieldBreaker")) {
+                ShieldBreaker sb = RailMacrosMod.SHIELD_BREAKER;
+
+                tmpBool.set(sb.isEnabled());
+                if (ImGui.checkbox("Enabled##shieldbreaker", tmpBool)) {
+                    sb.toggle();
+                    ModConfig.save();
+                }
+
+                tmpFloat[0] = (float)(sb.getMissChance() * 100.0);
+                if (ImGui.sliderFloat("Miss Chance##sb", tmpFloat, 0, 50, "%.0f%%")) {
+                    sb.setMissChance(tmpFloat[0] / 100.0);
+                }
+
+                tmpInt[0] = sb.getMinDelayMs();
+                if (ImGui.sliderInt("Min Delay##sb", tmpInt, 0, 500, "%dms")) {
+                    sb.setMinDelayMs(tmpInt[0]);
+                }
+
+                tmpInt[0] = sb.getMaxDelayMs();
+                if (ImGui.sliderInt("Max Delay##sb", tmpInt, 0, 500, "%dms")) {
+                    sb.setMaxDelayMs(tmpInt[0]);
+                }
+
+                ImGui.separator();
+            }
+
+            // ===== AutoSprint =====
+            if (ImGui.collapsingHeader("AutoSprint")) {
+                tmpBool.set(RailMacrosMod.AUTO_SPRINT.isEnabled());
+                if (ImGui.checkbox("Enabled##autosprint", tmpBool)) {
+                    RailMacrosMod.AUTO_SPRINT.toggle();
+                    ModConfig.save();
+                }
+
+                ImGui.separator();
+            }
+
+            // ===== CartGuard =====
+            if (ImGui.collapsingHeader("CartGuard")) {
+                tmpBool.set(RailMacrosMod.CART_GUARD.isEnabled());
+                if (ImGui.checkbox("Enabled##cartguard", tmpBool)) {
+                    RailMacrosMod.CART_GUARD.toggle();
+                    ModConfig.save();
+                }
+
+                ImGui.separator();
+            }
+
+            // ===== CrossbowSwap =====
+            if (ImGui.collapsingHeader("CrossbowSwap (MB5)")) {
+                tmpBool.set(RailMacrosMod.CROSSBOW_SWAP.isEnabled());
+                if (ImGui.checkbox("Enabled##xbowswap", tmpBool)) {
+                    RailMacrosMod.CROSSBOW_SWAP.toggle();
+                    ModConfig.save();
+                }
+
+                ImGui.separator();
+            }
+        }
+        ImGui.end();
     }
 
     @Override
@@ -233,43 +255,8 @@ public class ModMenuScreen extends Screen {
         return true;
     }
 
-    private Text getXbowText() {
-        boolean on = RailMacrosMod.RAIL_MACRO.isEnabled();
-        return Text.literal("Xbow Macro: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
-    }
-
-    private Text getInstaCartText() {
-        boolean on = RailMacrosMod.BOW_MACRO.isEnabled();
-        return Text.literal("InstaCart: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
-    }
-
-    private Text getTriggerBotText() {
-        boolean on = RailMacrosMod.TRIGGER_BOT.isEnabled();
-        return Text.literal("TriggerBot: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
-    }
-
-    private Text getShieldBreakerText() {
-        boolean on = RailMacrosMod.SHIELD_BREAKER.isEnabled();
-        return Text.literal("ShieldBreaker: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
-    }
-
-    private Text getAutoSprintText() {
-        boolean on = RailMacrosMod.AUTO_SPRINT.isEnabled();
-        return Text.literal("AutoSprint: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
-    }
-
-    private Text getCartGuardText() {
-        boolean on = RailMacrosMod.CART_GUARD.isEnabled();
-        return Text.literal("CartGuard: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
-    }
-
-    private Text getCrossbowSwapText() {
-        boolean on = RailMacrosMod.CROSSBOW_SWAP.isEnabled();
-        return Text.literal("XbowSwap (MB5): " + (on ? "\u00a7aON" : "\u00a7cOFF"));
-    }
-
-    private Text getHoverRefillText() {
-        boolean on = RailMacrosMod.HOVER_REFILL.isEnabled();
-        return Text.literal("HoverRefill: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
+    @Override
+    public boolean shouldPause() {
+        return false;
     }
 }

@@ -90,11 +90,6 @@ public class ModConfig {
         xbowSwap.addProperty("enabled", RailMacrosMod.CROSSBOW_SWAP.isEnabled());
         root.add("crossbowSwap", xbowSwap);
 
-        // HoverRefill
-        JsonObject hoverRefill = new JsonObject();
-        hoverRefill.addProperty("enabled", RailMacrosMod.HOVER_REFILL.isEnabled());
-        root.add("hoverRefill", hoverRefill);
-
         try {
             Files.writeString(getConfigPath(), GSON.toJson(root));
         } catch (IOException e) {
@@ -182,14 +177,6 @@ public class ModConfig {
                 JsonObject xs = root.getAsJsonObject("crossbowSwap");
                 if (xs.has("enabled") && xs.get("enabled").getAsBoolean() != RailMacrosMod.CROSSBOW_SWAP.isEnabled()) {
                     RailMacrosMod.CROSSBOW_SWAP.toggle();
-                }
-            }
-
-            // HoverRefill
-            if (root.has("hoverRefill")) {
-                JsonObject hr = root.getAsJsonObject("hoverRefill");
-                if (hr.has("enabled") && hr.get("enabled").getAsBoolean() != RailMacrosMod.HOVER_REFILL.isEnabled()) {
-                    RailMacrosMod.HOVER_REFILL.toggle();
                 }
             }
 

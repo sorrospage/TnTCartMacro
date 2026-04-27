@@ -20,7 +20,6 @@ public class RailMacrosMod implements ClientModInitializer {
     public static final ShieldBreaker SHIELD_BREAKER = new ShieldBreaker();
     public static final CartGuard CART_GUARD = new CartGuard();
     public static final CrossbowSwap CROSSBOW_SWAP = new CrossbowSwap();
-    public static final HoverRefill HOVER_REFILL = new HoverRefill();
 
     private static KeyBinding railMacroToggle;
     private static KeyBinding bowMacroToggle;
@@ -111,9 +110,6 @@ public class RailMacrosMod implements ClientModInitializer {
                 client.setScreen(new ModMenuScreen());
             }
         }
-
-        // HoverRefill needs to run while inventory screens are open
-        HOVER_REFILL.tick(client);
 
         // Pause macros while any screen (inventory, chest, etc.) is open
         // but not our own menu screen

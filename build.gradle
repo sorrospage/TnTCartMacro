@@ -11,6 +11,7 @@ base {
 }
 
 repositories {
+    mavenCentral()
 }
 
 dependencies {
@@ -21,6 +22,13 @@ dependencies {
 
     // Fabric API
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    // ImGui
+    implementation include('io.github.spair:imgui-java-binding:1.89.0')
+    implementation include('io.github.spair:imgui-java-lwjgl3:1.89.0')
+    implementation include('io.github.spair:imgui-java-natives-linux:1.89.0')
+    implementation include('io.github.spair:imgui-java-natives-windows:1.89.0')
+    implementation include('io.github.spair:imgui-java-natives-macos:1.89.0')
 }
 
 processResources {
