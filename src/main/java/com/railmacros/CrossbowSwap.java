@@ -46,6 +46,13 @@ public class CrossbowSwap {
     }
 
     /**
+     * Check if there is a loaded crossbow anywhere in the hotbar.
+     */
+    public boolean hasLoadedCrossbow(ClientPlayerEntity player) {
+        return findLoadedCrossbowSlot(player) != -1;
+    }
+
+    /**
      * Find a loaded crossbow in the hotbar (one with charged projectiles).
      * Returns the slot index, or -1 if not found.
      */

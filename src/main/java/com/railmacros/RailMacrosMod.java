@@ -10,6 +10,7 @@ import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
 
 import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_5;
+import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
 
 public class RailMacrosMod implements ClientModInitializer {
 
@@ -127,10 +128,18 @@ public class RailMacrosMod implements ClientModInitializer {
             BOW_MACRO.resetCounts(client);
         }
 
-        // Handle CrossbowSwap trigger: Mouse Button 5 — edge-detect to trigger once per press
-        if (crossbowSwapKey.isPressed()) {
+        // Handle CrossbowSwap trigger: Mouse Button 5 — use raw GLFW input so it
+        // overrides / ignores any other keybinds on MB5 when a loaded crossbow is in hotbar
+        long window = client.getWindow().getHandle();
+        boolean mb5Down = GLFW.glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_5) == GLFW_PRESS;
+        if (mb5Down) {
             if (!crossbowSwapKeyWasPressed) {
-                CROSSBOW_SWAP.trigger(client);
+                if (CROSSBOW_SWAP.isEnabled() && client.player != null
+                        && CROSSBOW_SWAP.hasLoadedCrossbow(client.player)) {
+                    CROSSBOW_SWAP.trigger(client);
+                    // Consume the keybind press so other bindings on MB5 don't fire
+                    while (crossbowSwapKey.wasPressed()) { /* drain */ }
+                }
                 crossbowSwapKeyWasPressed = true;
             }
         } else {
