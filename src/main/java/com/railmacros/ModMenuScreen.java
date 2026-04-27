@@ -24,14 +24,12 @@ public class ModMenuScreen extends Screen {
     private boolean xbowExpanded = false;
     private boolean instaCartExpanded = false;
     private boolean triggerBotExpanded = false;
-    private boolean autoSprintExpanded = false;
     private boolean shieldBreakerExpanded = false;
 
     // Track slider widgets per section so we can show/hide them
     private final List<ClickableWidget> xbowSliders = new ArrayList<>();
     private final List<ClickableWidget> instaCartSliders = new ArrayList<>();
     private final List<ClickableWidget> triggerBotSliders = new ArrayList<>();
-    private final List<ClickableWidget> autoSprintSliders = new ArrayList<>();
     private final List<ClickableWidget> shieldBreakerSliders = new ArrayList<>();
 
     public ModMenuScreen() {
@@ -44,7 +42,6 @@ public class ModMenuScreen extends Screen {
         xbowSliders.clear();
         instaCartSliders.clear();
         triggerBotSliders.clear();
-        autoSprintSliders.clear();
         shieldBreakerSliders.clear();
 
         int centerX = this.width / 2 - BUTTON_WIDTH / 2;
@@ -187,15 +184,6 @@ public class ModMenuScreen extends Screen {
         }).dimensions(centerX, y, BUTTON_WIDTH, WIDGET_HEIGHT).build());
 
         y += SPACING;
-
-        // ===== HoverRefill =====
-        addDrawableChild(ButtonWidget.builder(getHoverRefillText(), button -> {
-            RailMacrosMod.HOVER_REFILL.toggle();
-            button.setMessage(getHoverRefillText());
-            ModConfig.save();
-        }).dimensions(centerX, y, BUTTON_WIDTH, WIDGET_HEIGHT).build());
-
-        y += SPACING;
     }
 
     private int addSlider(List<ClickableWidget> list, int x, int y, String label,
@@ -266,10 +254,5 @@ public class ModMenuScreen extends Screen {
     private Text getCrossbowSwapText() {
         boolean on = RailMacrosMod.CROSSBOW_SWAP.isEnabled();
         return Text.literal("XbowSwap (MB5): " + (on ? "\u00a7aON" : "\u00a7cOFF"));
-    }
-
-    private Text getHoverRefillText() {
-        boolean on = RailMacrosMod.HOVER_REFILL.isEnabled();
-        return Text.literal("HoverRefill: " + (on ? "\u00a7aON" : "\u00a7cOFF"));
     }
 }
